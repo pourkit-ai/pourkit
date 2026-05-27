@@ -132,7 +132,9 @@ describe("SandcastleExecutionProvider", () => {
         agent: "build",
         model: "test-build",
         prompt: "build this",
-        target: makeTarget([{ command: "npm install", label: "install" }]),
+        target: makeTarget([
+          { command: "HUSKY=0 npm install", label: "install" },
+        ]),
         repoRoot: "/repo",
         branchName: "pourkit/42/test-issue",
         sandbox: sandboxConfig,
@@ -156,7 +158,7 @@ describe("SandcastleExecutionProvider", () => {
         copyToWorktree: ["node_modules"],
         hooks: {
           sandbox: {
-            onSandboxReady: [{ command: "npm install" }],
+            onSandboxReady: [{ command: "HUSKY=0 npm install" }],
           },
         },
       });
