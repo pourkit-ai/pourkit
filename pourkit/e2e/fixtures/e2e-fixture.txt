@@ -1,0 +1,10 @@
+This is a harmless fixture file for E2E testing.
+It will be modified by the deterministic agent during the live E2E run.
+Initial content — do not delete this file.
+
+Modified by deterministic builder during E2E test run.
+Timestamp: 2026-05-11T03:00:43Z
+
+Refactor marker added by deterministic refactor stage.
+Iteration: 1
+Timestamp: 2026-05-11T03:01:03Z
