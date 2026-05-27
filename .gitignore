@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.DS_Store
+pourkit/logs/
+pourkit/.env
+pourkit/tmp/
+.pourkit/.tmp/
+.pourkit/logs/
+.pourkit/state.json
+pourkit.config.json
+pourkit.config.ts
+.serena/
+.pourkit/handoffs/
+.pourkit/strategy.ts
+.pourkit/sandbox.ts
+.vera/
