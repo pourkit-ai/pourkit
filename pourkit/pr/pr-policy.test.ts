@@ -244,7 +244,7 @@ describe("runPrPolicy", () => {
       repoRoot: "/fake-root",
     });
 
-    expect(result.baseBranch).toBe("main");
+    expect(result.baseBranch).toBe("next");
     expect(result.currentBranch).toBe("agent/test-feature");
     expect(result.root).toBe("/fake-root");
   });
