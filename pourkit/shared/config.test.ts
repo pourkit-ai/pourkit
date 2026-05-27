@@ -292,9 +292,7 @@ describe("parseConfig", () => {
           {
             name: "prod",
             autoMerge: false,
-            setupCommands: [
-              { command: "npm install", label: "install" },
-            ],
+            setupCommands: [{ command: "npm install", label: "install" }],
             strategy: strategy({ verify: undefined }),
           },
         ],

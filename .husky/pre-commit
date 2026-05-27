@@ -1,0 +1,5 @@
+npx lint-staged
+npm run prettier:check
+npm run typecheck
+npm run test:agent
+npm run build

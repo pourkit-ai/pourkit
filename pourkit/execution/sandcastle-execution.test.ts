@@ -132,9 +132,7 @@ describe("SandcastleExecutionProvider", () => {
         agent: "build",
         model: "test-build",
         prompt: "build this",
-        target: makeTarget([
-          { command: "npm install", label: "install" },
-        ]),
+        target: makeTarget([{ command: "npm install", label: "install" }]),
         repoRoot: "/repo",
         branchName: "pourkit/42/test-issue",
         sandbox: sandboxConfig,
