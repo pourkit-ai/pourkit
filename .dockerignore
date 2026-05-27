@@ -1,0 +1,4 @@
+**
+!pourkit/**
+pourkit/logs/**
+!.dockerignore

@@ -1,0 +1,36 @@
+name: Close issues on merge
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  close:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Close issues on merge
+        run: npm run pourkit:close-issues-on-merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          POURKIT_PR_NUMBER: ${{ github.event.pull_request.number }}
+          POURKIT_PR_TITLE: ${{ github.event.pull_request.title }}
+          POURKIT_PR_BODY: ${{ github.event.pull_request.body }}

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "pourkit-builder": {
+      "mode": "primary",
+      "hidden": true,
+      "description": "Implements Pourkit issues as the Builder role.",
+      "reasoningEffort": "high",
+      "temperature": 0.2,
+      "permission": {
+        "task": {
+          "*": "deny",
+          "advisory-analyzer": "allow"
+        }
+      }
+    },
+    "pourkit-reviewer": {
+      "mode": "primary",
+      "hidden": true,
+      "description": "Produces authoritative Pourkit Reviewer artifacts.",
+      "permission": {
+        "task": "deny"
+      }
+    },
+    "pourkit-refactor": {
+      "mode": "primary",
+      "hidden": true,
+      "reasoningEffort": "max",
+      "temperature": 0.1,
+      "description": "Addresses Pourkit Reviewer findings as the Refactor role.",
+      "permission": {
+        "task": {
+          "*": "deny",
+          "advisory-analyzer": "allow"
+        }
+      }
+    },
+    "pourkit-pr-description": {
+      "mode": "primary",
+      "hidden": true,
+      "reasoningEffort": "high",
+      "temperature": 0.1,
+      "description": "Writes Pourkit PR description artifacts.",
+      "permission": {
+        "task": "deny"
+      }
+    },
+    "advisory-analyzer": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Provides bounded advisory analysis for Pourkit Builder and Refactor only.",
+      "prompt": "{file:.pourkit/prompts/advisory-analyzer.prompt.md}",
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "edit": "deny",
+        "bash": "deny",
+        "task": "deny"
+      }
+    }
+  }
+}
