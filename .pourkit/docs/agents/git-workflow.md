@@ -1,14 +1,5 @@
 # Git Workflow
 
-## Branch policy
-
-Repo enforces strict git workflow via Husky hooks:
-
-- **Direct commits to `next` or `master` blocked** at commit time.
-- **Topic branches** (`feat/*`, `fix/*`, etc.) must contain latest `origin/next` before commit/push.
-- **Hotfix branches** (`hotfix/*`) must contain latest `origin/master` before commit/push.
-- **Protected branches** (`next`, `master`) only updatable via force push (`pre-push` hook).
-
 ## Branch naming
 
 - Normal work: `feat/<name>`, `fix/<name>`, `refactor/<name>`, `docs/<name>`, `chore/<name>`

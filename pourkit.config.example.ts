@@ -8,7 +8,7 @@ export default definePourkitConfig({
       branchTemplate: "pourkit/{{issue.number}}/{{issue.slug}}",
       autoMerge: true,
       // queue: { loop: true }, // enable queue loop mode (also via --loop CLI flag)
-      setupCommands: [{ command: "HUSKY=0 npm install", label: "install" }],
+      setupCommands: [{ command: "npm install", label: "install" }],
       strategy: {
         type: "review-refactor-loop",
         implement: {

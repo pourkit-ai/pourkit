@@ -293,7 +293,7 @@ describe("parseConfig", () => {
             name: "prod",
             autoMerge: false,
             setupCommands: [
-              { command: "HUSKY=0 npm install", label: "install" },
+              { command: "npm install", label: "install" },
             ],
             strategy: strategy({ verify: undefined }),
           },
@@ -308,7 +308,7 @@ describe("parseConfig", () => {
     );
     expect(target.autoMerge).toBe(false);
     expect(target.setupCommands).toEqual([
-      { command: "HUSKY=0 npm install", label: "install" },
+      { command: "npm install", label: "install" },
     ]);
   });
 
