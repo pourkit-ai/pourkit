@@ -764,7 +764,9 @@ describe("planInit", () => {
           expect(configOp?.content).toContain('agent: "pourkit-builder"');
           expect(configOp?.content).toContain('agent: "pourkit-reviewer"');
           expect(configOp?.content).toContain('agent: "pourkit-refactor"');
-          expect(configOp?.content).toContain('agent: "pourkit-pr-description"');
+          expect(configOp?.content).toContain(
+            'agent: "pourkit-pr-description"'
+          );
           expect(configOp?.content).not.toContain('baseBranch: "next"');
 
           // Regression: existing OpenCode mounts unchanged
@@ -1157,7 +1159,11 @@ describe("planInit", () => {
           await mkdir(path.join(sourceRoot, ".pourkit", "prompts"), {
             recursive: true,
           });
-          const repoPromptsDir = path.join(process.cwd(), ".pourkit", "prompts");
+          const repoPromptsDir = path.join(
+            process.cwd(),
+            ".pourkit",
+            "prompts"
+          );
           for (const name of ["builder.prompt.md", "refactor.prompt.md"]) {
             const content = readFileSync(
               path.join(repoPromptsDir, name),

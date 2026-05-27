@@ -129,9 +129,9 @@ describe("validatePrHead", () => {
     expect(() => validatePrHead("pourkit-e2e-target/run-123", "next")).toThrow(
       "Refusing to create PR from disposable E2E target branch"
     );
-    expect(() => validatePrHead("pourkit-e2e-target/run-123", "master")).toThrow(
-      "Refusing to create PR from disposable E2E target branch"
-    );
+    expect(() =>
+      validatePrHead("pourkit-e2e-target/run-123", "master")
+    ).toThrow("Refusing to create PR from disposable E2E target branch");
   });
 
   it("rejects disposable E2E agent branches for normal bases", () => {

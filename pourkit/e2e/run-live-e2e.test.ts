@@ -240,7 +240,9 @@ describe("bundled entrypoint contract", () => {
 
   it("builds Pourkit before launching the bundled E2E runner", () => {
     const scripts = loadPackageScripts();
-    expect(scripts["pourkit:e2e"]).toContain("npm run build --workspace pourkit");
+    expect(scripts["pourkit:e2e"]).toContain(
+      "npm run build --workspace pourkit"
+    );
     expect(scripts["pourkit:e2e"]).toContain(
       "node pourkit/dist/e2e/run-live-e2e.js"
     );

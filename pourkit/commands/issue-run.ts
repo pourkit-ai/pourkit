@@ -1,6 +1,10 @@
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
-import type { PourkitConfig, IssueData, ResolvedTarget } from "../shared/config";
+import type {
+  PourkitConfig,
+  IssueData,
+  ResolvedTarget,
+} from "../shared/config";
 import { resolvePromptTemplatePath, resolveTarget } from "../shared/config";
 import { renderBranchName } from "../pr/templates";
 import type { IssueProvider } from "../providers/issue-provider";

@@ -514,7 +514,12 @@ describe("cleanupRepository", () => {
 
   it("preserves old unreadable log files rather than deleting them", async () => {
     const tmpDir = mkdtempSync(join(tmpdir(), "pourkit-cleanup-test-"));
-    const unreadableLogPath = join(tmpDir, ".pourkit", "logs", "unreadable.log");
+    const unreadableLogPath = join(
+      tmpDir,
+      ".pourkit",
+      "logs",
+      "unreadable.log"
+    );
     try {
       mkdirSync(join(tmpDir, ".pourkit", "logs"), { recursive: true });
       writeFileSync(unreadableLogPath, "secret");
