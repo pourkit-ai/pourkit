@@ -1,5 +1,14 @@
 # Git Workflow
 
+## Branch policy
+
+Direct commits and pushes to `main` or `next` are not allowed. All changes must go through a topic branch and a pull request.
+
+- **Direct commits to `next` or `main` blocked** at commit time.
+- **Topic branches** (`feat/*`, `fix/*`, etc.) must contain latest `origin/next` before commit/push.
+- **Hotfix branches** (`hotfix/*`) must contain latest `origin/master` before commit/push.
+- **Protected branches** (`next`, `main`) only updatable via PR merge.
+
 ## Branch naming
 
 - Normal work: `feat/<name>`, `fix/<name>`, `refactor/<name>`, `docs/<name>`, `chore/<name>`

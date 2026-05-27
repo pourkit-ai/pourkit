@@ -13,4 +13,4 @@ pourkit.config.ts
 .pourkit/handoffs/
 .pourkit/strategy.ts
 .pourkit/sandbox.ts
-.vera/
+.env

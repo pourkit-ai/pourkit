@@ -26,12 +26,15 @@
     "pourkit:e2e:test-live": "npm run build && npm run typecheck && npm run test && bash pourkit/e2e/test-live.sh",
     "pourkit:e2e:test-all-live": "npm run pourkit:e2e:test-live --target=$npm_config_target -- pourkit/e2e/live/*.test.ts",
     "prettier:check": "prettier --ignore-unknown --check .",
-    "prettier:write": "prettier --ignore-unknown --write ."
+    "prettier:write": "prettier --ignore-unknown --write .",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@ai-hero/sandcastle": "^0.6.3",
     "@types/node": "^25.6.2",
     "concurrently": "^9.2.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
     "tsup": "^8.5.0",
     "tsx": "^4.21.0",
