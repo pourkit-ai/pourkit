@@ -30,9 +30,6 @@ export async function inferBaseBranch(
 }
 
 function normalizeBaseBranch(base: string): string {
-  if (base === "main") {
-    return "next";
-  }
   return base;
 }
 

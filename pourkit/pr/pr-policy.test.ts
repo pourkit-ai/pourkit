@@ -73,17 +73,17 @@ describe("inferBaseBranch", () => {
     expect(result).toBe("next");
   });
 
-  it("normalizes 'main' to 'next' when explicit base is 'main'", async () => {
+  it("returns 'main' as-is when explicit base is 'main'", async () => {
     const result = await inferBaseBranch("main", makeTarget());
-    expect(result).toBe("next");
+    expect(result).toBe("main");
   });
 
-  it("normalizes 'main' to 'next' when falling back to target baseBranch", async () => {
+  it("uses target baseBranch as-is without normalization", async () => {
     const result = await inferBaseBranch(
       undefined,
       makeTarget({ baseBranch: "main" })
     );
-    expect(result).toBe("next");
+    expect(result).toBe("main");
   });
 });
 
@@ -244,12 +244,12 @@ describe("runPrPolicy", () => {
       repoRoot: "/fake-root",
     });
 
-    expect(result.baseBranch).toBe("next");
+    expect(result.baseBranch).toBe("main");
     expect(result.currentBranch).toBe("agent/test-feature");
     expect(result.root).toBe("/fake-root");
   });
 
-  it("normalizes explicit base 'main' to 'next'", async () => {
+  it("uses explicit base 'main' as-is without normalization", async () => {
     execCaptureMock.mockResolvedValue({
       code: 0,
       stdout: "agent/test-feature\n",
@@ -263,6 +263,6 @@ describe("runPrPolicy", () => {
       repoRoot: "/fake-root",
     });
 
-    expect(result.baseBranch).toBe("next");
+    expect(result.baseBranch).toBe("main");
   });
 });
