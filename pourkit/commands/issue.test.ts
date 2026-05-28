@@ -3192,6 +3192,7 @@ describe("runIssueCommand", () => {
       "git",
       [
         "commit",
+        "--no-verify",
         "-m",
         "chore: Refactor Loop Generated Title",
         "-m",
@@ -6010,6 +6011,7 @@ describe("runIssueCommand", () => {
       "git",
       [
         "commit",
+        "--no-verify",
         "-m",
         "chore: Test issue",
         "-m",

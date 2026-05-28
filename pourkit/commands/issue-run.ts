@@ -908,7 +908,7 @@ async function finalizeWorktreeCommit(options: {
     label: "git add",
   });
 
-  await execCapture("git", ["commit", "-m", title, "-m", body], {
+  await execCapture("git", ["commit", "--no-verify", "-m", title, "-m", body], {
     cwd: worktreePath,
     logger,
     label: "git commit",

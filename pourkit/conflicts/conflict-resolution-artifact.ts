@@ -1,9 +1,16 @@
 export type ConflictResolutionArtifactStatus = "resolved" | "ambiguous";
 
+export interface ConflictResolutionVerificationRow {
+  command: string;
+  result: string;
+  notes: string;
+}
+
 export interface ConflictResolutionArtifact {
   status: ConflictResolutionArtifactStatus;
   summary: string;
   files: string[];
+  verification?: ConflictResolutionVerificationRow[];
   raw: string;
 }
 
@@ -19,10 +26,10 @@ const VALID_STATUSES: ConflictResolutionArtifactStatus[] = [
   "ambiguous",
 ];
 
-const SECTION_HEADING_PATTERN = /^## (Status|Summary|Files)\s*$/gm;
+const SECTION_HEADING_PATTERN = /^## (Status|Summary|Files|Verification)\s*$/gm;
 
 interface SectionMatch {
-  heading: "Status" | "Summary" | "Files";
+  heading: "Status" | "Summary" | "Files" | "Verification";
   startIndex: number;
   endIndex: number;
 }
@@ -32,7 +39,7 @@ function extractSections(output: string): SectionMatch[] {
   let match: RegExpExecArray | null;
   const re = new RegExp(SECTION_HEADING_PATTERN);
   while ((match = re.exec(output)) !== null) {
-    const heading = match[1] as "Status" | "Summary" | "Files";
+    const heading = match[1] as "Status" | "Summary" | "Files" | "Verification";
     sections.push({
       heading,
       startIndex: match.index,
@@ -79,6 +86,31 @@ function parseFileList(filesContent: string): string[] {
     });
 }
 
+function parseVerificationTable(
+  content: string
+): ConflictResolutionVerificationRow[] {
+  const lines = content
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const tableLines = lines.filter((l) => l.startsWith("|") && l.endsWith("|"));
+
+  // index 0 = heading row, index 1 = separator row, index 2+ = data rows
+  const dataRows = tableLines.slice(2);
+
+  return dataRows.map((row) => {
+    const cells = row
+      .split("|")
+      .slice(1, -1)
+      .map((c) => c.trim());
+    return {
+      command: cells[0] ?? "",
+      result: cells[1] ?? "",
+      notes: cells[2] ?? "",
+    };
+  });
+}
+
 export function parseConflictResolutionArtifact(
   output: string
 ): ConflictResolutionArtifact {
@@ -109,6 +141,10 @@ export function parseConflictResolutionArtifact(
       'Duplicate "## Files" sections'
     );
   }
+
+  const verificationSections = sections.filter(
+    (s) => s.heading === "Verification"
+  );
 
   const statusSection = statusSections[0];
   const summarySection = summarySections[0];
@@ -164,10 +200,21 @@ export function parseConflictResolutionArtifact(
     );
   }
 
+  let verification: ConflictResolutionVerificationRow[] | undefined;
+  if (verificationSections.length > 0) {
+    const verificationContent = contentAfter(
+      output,
+      sections,
+      verificationSections[0]
+    );
+    verification = parseVerificationTable(verificationContent);
+  }
+
   return {
     status: statusRaw as ConflictResolutionArtifactStatus,
     summary,
     files: parseFileList(filesContent),
+    verification,
     raw: output,
   };
 }
