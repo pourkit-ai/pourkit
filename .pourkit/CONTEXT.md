@@ -92,6 +92,22 @@ _Avoid_: Failure, escalation without context
 A structured **Artifact** written by a **Refactor** attempt that records how each **Reviewer** finding was handled, verification performed, and open blockers.
 _Avoid_: Refactor summary, chat response, fix log
 
+**Release Lane**:
+A protected branch that carries a distinct publish contract for the Pourkit CLI.
+_Avoid_: Environment, deployment branch
+
+**Development Release**:
+An automated npm snapshot of `@pourkit/cli` published from the `next` **Release Lane** under the `next` dist-tag for dogfooding.
+_Avoid_: Canary, beta, develop build
+
+**Stable Release**:
+An npm release of `@pourkit/cli` published from the `main` **Release Lane** under the `latest` dist-tag after a Changesets Version Packages PR is merged.
+_Avoid_: Production deploy, final build
+
+**Changeset**:
+A release-note and version-intent file required for user-facing changes so Changesets can calculate the next stable version and changelog.
+_Avoid_: Changelog entry, release note file
+
 ## Relationships
 
 - A **Target** selects one **Strategy** for processing an **Issue**
@@ -116,6 +132,8 @@ _Avoid_: Refactor summary, chat response, fix log
 - **Finding Lineage** connects **Reviewer** findings across iterations via IDs and `Supersedes` links
 - A **Provider** or **Command** uses the **GitHub API Client** for Octokit-backed GitHub API operations while local repository operations remain `git`
 - **Human Handoff** moves the **Issue** to `ready-for-human` when agent iteration should stop
+- Pourkit uses `next` and `main` as **Release Lanes**: `next` publishes **Development Releases**, while `main` publishes **Stable Releases**
+- User-facing changes require a **Changeset** before they can enter the release workflow; internal-only changes explicitly opt out with the `no-changeset-needed` label
 
 ## Example Dialogue
 
@@ -132,3 +150,4 @@ _Avoid_: Refactor summary, chat response, fix log
 
 - Builder and older implementation-role wording were both plausible; resolved: use **Builder** for the implementation agent role (legacy references in config rejection guards are historical and kept as-is).
 - "agent" was overloaded; resolved: qualify with role (Builder, Reviewer, Refactor, Conflict Resolution Agent, PR Description Agent).
+- "development release" was ambiguous with Git Flow `develop`; resolved: use **Development Release** for npm snapshots from the `next` **Release Lane**, not a separate environment.

@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  version-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard branch for manual dispatch
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "::error::Manual dispatch is only supported on refs/heads/main"
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prettier check
+        run: npm run prettier:check
+
+      - name: Run tests
+        run: npm run test:agent
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Run build
+        run: npm run build
+
+      - name: Package smoke check
+        run: npm run package:smoke
+
+      - name: Create Release PR or Publish
+        uses: changesets/action@v1
+        with:
+          publish: npx changeset publish --provenance
+          version: npx changeset version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

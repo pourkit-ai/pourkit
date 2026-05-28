@@ -1,17 +1,30 @@
 {
   "name": "@pourkit/cli",
-  "private": true,
+  "version": "0.1.0",
+  "private": false,
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pourkit-ai/pourkit.git"
+  },
+  "files": [
+    "dist"
+  ],
   "bin": {
     "pourkit": "dist/cli.js"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "scripts": {
     "build": "tsup --config tsup.config.ts",
     "postbuild": "chmod +x dist/cli.js dist/e2e/run-live-e2e.js dist/issues/unblock.js dist/issues/close-issues-on-merge.js",
     "typecheck": "tsc -p tsconfig.json --noEmit --pretty false"
   },
+  "devDependencies": {
+    "@pourkit/logger": "*"
+  },
   "dependencies": {
-    "@pourkit/logger": "*",
     "@clack/prompts": "^0.10.1",
     "commander": "^14.0.3",
     "octokit": "^5.0.5",
