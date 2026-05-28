@@ -26,12 +26,14 @@
     "pourkit:e2e:test-live": "npm run build && npm run typecheck && npm run test && bash pourkit/e2e/test-live.sh",
     "package:smoke": "npm run build --workspace pourkit && POURKIT_PACKAGE_SMOKE=true vitest run pourkit/package-smoke.test.ts",
     "pourkit:e2e:test-all-live": "npm run pourkit:e2e:test-live --target=$npm_config_target -- pourkit/e2e/live/*.test.ts",
+    "changeset": "changeset",
     "prettier:check": "prettier --ignore-unknown --check .",
     "prettier:write": "prettier --ignore-unknown --write .",
     "prepare": "husky"
   },
   "devDependencies": {
     "@ai-hero/sandcastle": "^0.6.3",
+    "@changesets/cli": "^2.31.0",
     "@types/node": "^25.6.2",
     "concurrently": "^9.2.1",
     "husky": "^9.1.7",

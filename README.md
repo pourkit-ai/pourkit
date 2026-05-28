@@ -27,6 +27,22 @@ Fine-grained personal access tokens (PATs) are preferred. Classic PATs and GitHu
 
 Set the desired token in your environment before running Pourkit. No separate GitHub command-line authentication is required for Pourkit runtime.
 
+## Release Lanes
+
+Pourkit uses two release lanes:
+
+- **`next`** — Development Releases. Every push to `next` runs full verification, package smoke checks, and publishes a unique Changesets snapshot to npm under the `next` dist-tag. No GitHub release or permanent git tag is created.
+
+- **`main`** — Stable Releases. Every push to `main` runs full verification, package smoke checks, and uses Changesets to open or update a Version Packages PR. Merging that PR publishes `@pourkit/cli@latest` with durable release metadata.
+
+### Changeset requirement
+
+User-facing pull requests targeting `next` or `main` must include a Changeset file (`.changeset/*.md`). PRs with only internal changes (refactors, CI, docs, tests) may bypass this requirement with the `no-changeset-needed` label.
+
+Run `npx changeset` in your working directory to create a Changeset.
+
+> Do not run `npm run changeset:publish` or `npx changeset publish` from a developer machine. Publishing is handled automatically by CI workflows on the `next` and `main` branches.
+
 ## Pourkit CLI
 
 - `pourkit issue <number> --target <name> --config <path>` is the canonical entry point for the single-issue workflow.

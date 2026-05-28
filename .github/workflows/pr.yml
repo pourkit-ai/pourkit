@@ -29,6 +29,8 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -50,3 +52,7 @@ jobs:
 
       - name: Run build
         run: npm run build
+
+      - name: Changeset guardrail
+        if: github.base_ref == 'next' || github.base_ref == 'main'
+        run: npx tsx scripts/check-changeset-required.ts
