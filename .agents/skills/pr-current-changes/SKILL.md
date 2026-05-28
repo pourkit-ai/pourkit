@@ -29,22 +29,27 @@ Ask the user:
 - Which branch should the PR target? Resolve an explicit branch name. Default to the current branch name, but always capture the exact string to pass as `--base`.
 - How should merge be handled after PR creation? Default to merge after checks are green; second option is to leave open.
 
-Do not target `master` unless the user explicitly selects it.
+### 3. Ensure the current branch is up-to-date
 
-### 3. Move work to a dedicated branch
+Before branching off, check whether the current branch has an upstream. If it does not, ask the user how to establish one. If they decline, stop and explain that the branch must be up to date before creating a PR. If it does, check whether it is up to date. If it is not, ask before performing any sync operation (e.g. pull, rebase, stash). If the user declines or the branch cannot be safely updated without going outside this workflow, stop and explain that the PR will not be based on the latest code.
+
+### 4. Move work to a dedicated branch
+
+Record the current branch name so you can return to it later:
+
+```bash
+original_branch=$(git rev-parse --abbrev-ref HEAD)
+```
 
 If the current branch is not already a suitable topic branch, create one before committing. Use a short slug based on the diff, for example:
 
 ```bash
-original_branch=$(git rev-parse --abbrev-ref HEAD)
 git switch -c chore/<short-change-slug>
 ```
 
-Record the original branch name (`$original_branch`) so you can return to it later.
-
 If the current branch already has pushed commits or unrelated work, ask before reusing it. Never force-reset, discard, or overwrite user changes.
 
-### 4. Commit current changes
+### 5. Commit current changes
 
 Stage only the intended files. Follow `.pourkit/docs/agents/commit-style.md`:
 
@@ -57,7 +62,7 @@ Stage only the intended files. Follow `.pourkit/docs/agents/commit-style.md`:
 
 Use no body for obvious one-line changes. Do not commit secrets, local-only files, or unrelated changes.
 
-### 5. Push the branch
+### 6. Push the branch
 
 Push the dedicated branch:
 
@@ -65,7 +70,7 @@ Push the dedicated branch:
 git push -u origin HEAD
 ```
 
-### 6. Create PR title and body
+### 7. Create PR title and body
 
 Write the PR body to `.pourkit/.tmp/pr-body.md` (a repo-local temp path, gitignored by Pourkit).
 
@@ -93,11 +98,11 @@ PR body format:
 
 Use bullet points only. Do not include commit lists or development chronology.
 
-### 7. Create the pull request
+### 8. Create the pull request
 
 Use `pourkit pr create`; never shell out to external GitHub tooling for PR creation.
 
-Always pass `--base <branch>` with the explicitly resolved branch name. Do not rely on the target policy to infer the user-selected base branch.
+Always pass the explicitly resolved branch name as `--base`:
 
 ```bash
 pourkit pr create --target default --base <branch> --title "<type>: <desc>" --body-file <body-file>
@@ -107,7 +112,7 @@ Capture and report the PR URL.
 
 After the PR is created, remove `.pourkit/.tmp/pr-body.md`.
 
-### 8. Optional merge handling
+### 9. Optional merge handling
 
 If the user chose leave open, switch back to `$original_branch` and stop.
 
@@ -117,7 +122,17 @@ If the user chose merge after checks are green (default), wait for checks and me
 pourkit pr merge <number>
 ```
 
-After merging, switch back to `$original_branch`.
+After merging, switch back to `$original_branch`:
+
+```bash
+git switch "$original_branch"
+```
+
+If `$original_branch` is the PR target branch, update it from its upstream. If it is not, ask whether the user wants the merged changes brought onto `$original_branch`, and if so, which strategy to use.
+
+### 10. Stay within scope
+
+Only perform the steps above. Ask before doing anything outside this workflow, especially rebasing, force-pushing, resetting, or other history-altering branch operations.
 
 ## Safety Rules
 
@@ -129,7 +144,5 @@ After merging, switch back to `$original_branch`.
 - Use `pourkit pr merge` for PR merging; do not shell out to external GitHub tooling for PR merging.
 - Write PR body to `.pourkit/.tmp/` (repo-local, not `/tmp/`).
 - Clean up `.pourkit/.tmp/pr-body.md` after PR creation.
-- Return to `$original_branch` after merge handling.
-- Always pass `--base <branch>` to `pourkit pr create`, even when using the current branch as the PR target — target policy does not imply the user-selected branch.
-- Ask before including ambiguous changes or targeting `master`.
+- Return to `$original_branch` after merge handling; update it from its upstream only if it is the PR target branch, otherwise ask.
 - Do not amend existing commits unless the user explicitly asks.
