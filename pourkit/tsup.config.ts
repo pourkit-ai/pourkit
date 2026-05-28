@@ -18,6 +18,18 @@ function resolveBuildVersion(): string {
   const configDir = path.dirname(fileURLToPath(import.meta.url));
   const root = path.resolve(configDir, "..");
 
+  // Use package.json version as the source of truth for npm builds
+  try {
+    const pkg = JSON.parse(
+      readFileSync(path.join(configDir, "package.json"), "utf-8")
+    );
+    if (pkg.version && pkg.version !== DEVELOPMENT_VERSION) {
+      return pkg.version;
+    }
+  } catch {
+    // Fall through to git tag fallback
+  }
+
   try {
     const stdout = execFileSync(
       "git",
