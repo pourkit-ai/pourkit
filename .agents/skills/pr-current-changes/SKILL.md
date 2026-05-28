@@ -26,8 +26,8 @@ Use the diff to understand the final net change and to detect secrets, generated
 
 Ask the user:
 
-- Which branch should the PR target? Default to `next`; include `master` and custom branch as options.
-- How should merge be handled after PR creation? Options: leave open, merge now (checks must be green), or wait for checks and merge.
+- Which branch should the PR target? Default to the current HEAD branch; second option is to provide a custom branch.
+- How should merge be handled after PR creation? Default to merge after checks are green; second option is to leave open.
 
 Do not target `master` unless the user explicitly selects it.
 
@@ -97,13 +97,13 @@ Use bullet points only. Do not include commit lists or development chronology.
 
 Use `pourkit pr create`; never shell out to external GitHub tooling for PR creation.
 
-For the default `next` target:
+For the default (current HEAD) target:
 
 ```bash
 pourkit pr create --target default --title "<type>: <desc>" --body-file <body-file>
 ```
 
-For an explicitly selected base branch:
+For an explicitly provided custom base branch:
 
 ```bash
 pourkit pr create --target default --base <branch> --title "<type>: <desc>" --body-file <body-file>
@@ -117,16 +117,7 @@ After the PR is created, remove `.pourkit/.tmp/pr-body.md`.
 
 If the user chose leave open, switch back to `$original_branch` and stop.
 
-If the user chose merge now:
-- Merge immediately through Pourkit's Octokit-backed PR provider:
-
-```bash
-pourkit pr merge <number> --no-wait --no-target-green
-```
-
-- If GitHub rejects the merge because checks are not passing, inform the user and fall back to leave-open behavior.
-
-If the user chose wait and merge, wait for checks and merge only after they pass. Use Pourkit's Octokit-backed merge command:
+If the user chose merge after checks are green (default), wait for checks and merge only after they pass. Use Pourkit's Octokit-backed merge command:
 
 ```bash
 pourkit pr merge <number>
