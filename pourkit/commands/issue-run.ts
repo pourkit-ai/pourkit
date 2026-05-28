@@ -1086,8 +1086,9 @@ async function resetLocalBranchState(
     { cwd: root, logger, label: "git worktree list" }
   );
 
-  const existingWorktreePath = parseWorktreeListPorcelain(
+  const existingWorktreePath = resolveRegisteredIssueWorktreePath(
     worktreeList.stdout,
+    root,
     branchName
   );
 
@@ -1142,8 +1143,9 @@ async function resolveIssueWorktree(
     }
   );
 
-  const existingWorktreePath = parseWorktreeListPorcelain(
+  const existingWorktreePath = resolveRegisteredIssueWorktreePath(
     worktreeList.stdout,
+    root,
     branchName
   );
 
@@ -1174,8 +1176,7 @@ async function resolveIssueWorktree(
   }
 
   if (branchExists) {
-    const worktreeDir = branchName.replace(/\//g, "-");
-    const worktreePath = join(root, ".sandcastle", "worktrees", worktreeDir);
+    const worktreePath = issueWorktreePath(root, branchName);
     await execCapture("git", ["worktree", "add", worktreePath, branchName], {
       cwd: root,
       logger,
@@ -1192,6 +1193,37 @@ async function resolveIssueWorktree(
 
   const baseRef = await syncTargetBranch(root, baseBranch, logger);
   return { mode: "new", branchName, baseRef };
+}
+
+function issueWorktreePath(root: string, branchName: string): string {
+  return join(root, ".sandcastle", "worktrees", branchName.replace(/\//g, "-"));
+}
+
+function resolveRegisteredIssueWorktreePath(
+  worktreeListPorcelain: string,
+  root: string,
+  branchName: string
+): string | null {
+  const branchWorktreePath = parseWorktreeListPorcelain(
+    worktreeListPorcelain,
+    branchName
+  );
+  if (branchWorktreePath) return branchWorktreePath;
+
+  const expectedWorktreePath = issueWorktreePath(root, branchName);
+  const entries = worktreeListPorcelain.trim().split("\n\n");
+  for (const entry of entries) {
+    if (
+      entry
+        .trim()
+        .split("\n")
+        .some((line) => line === `worktree ${expectedWorktreePath}`)
+    ) {
+      return expectedWorktreePath;
+    }
+  }
+
+  return null;
 }
 
 async function syncTargetBranch(
