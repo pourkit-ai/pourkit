@@ -16,7 +16,7 @@ describe("@pourkit/cli package", () => {
   });
 
   it("has expected version", () => {
-    expect(cliPkg.version).toBe("0.1.0");
+    expect(cliPkg.version).toMatch(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z-.]+)?$/);
   });
 
   it("declares bin.pourkit pointing to dist/cli.js", () => {
@@ -29,6 +29,15 @@ describe("@pourkit/cli package", () => {
 
   it("restricts published files to dist", () => {
     expect(cliPkg.files).toEqual(["dist"]);
+  });
+
+  it("does not expose private @pourkit/* packages as runtime dependencies", () => {
+    const deps = cliPkg.dependencies ?? {};
+    const privatePourkitDeps = Object.keys(deps).filter((name) =>
+      name.startsWith("@pourkit/")
+    );
+
+    expect(privatePourkitDeps).toEqual([]);
   });
 
   (runPackageSmoke ? it : it.skip)("has dist/cli.js built and present", () => {
@@ -51,10 +60,24 @@ describe("@pourkit/cli package", () => {
         : packData.files.map((f: { path: string }) => f.path);
 
       expect(files).toContain("dist/cli.js");
-      expect(files).not.toContain(".pourkit/CONTEXT.md");
-      expect(files).not.toContain(".agents/");
-      expect(files).not.toContain("node_modules/");
-      expect(files).not.toContain(".changeset/");
+      expect(files.some((file) => file.startsWith(".pourkit/"))).toBe(false);
+      expect(files.some((file) => file.startsWith(".agents/"))).toBe(false);
+      expect(files.some((file) => file.startsWith("node_modules/"))).toBe(
+        false
+      );
+      expect(files.some((file) => file.startsWith(".changeset/"))).toBe(false);
+    }
+  );
+
+  (runPackageSmoke ? it : it.skip)(
+    "prints the package version from the built CLI",
+    () => {
+      const output = execSync("node dist/cli.js --version", {
+        cwd: configDir,
+        encoding: "utf-8",
+      }).trim();
+
+      expect(output).toBe(cliPkg.version);
     }
   );
 });
