@@ -1,0 +1,61 @@
+name: Next Release
+
+on:
+  push:
+    branches: [next]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard branch for manual dispatch
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [ "${{ github.ref }}" != "refs/heads/next" ]; then
+            echo "::error::Manual dispatch is only supported on refs/heads/next"
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prettier check
+        run: npm run prettier:check
+
+      - name: Run tests
+        run: npm run test:agent
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Create Changeset snapshot
+        run: npx changeset version --snapshot next
+
+      - name: Run build
+        run: npm run build
+
+      - name: Package smoke check
+        run: npm run package:smoke
+
+      - name: Publish snapshot to npm
+        run: npx changeset publish --tag next --provenance
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
