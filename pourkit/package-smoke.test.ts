@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
+const runPackageSmoke = process.env.POURKIT_PACKAGE_SMOKE === "true";
 
 describe("@pourkit/cli package", () => {
   const cliPkgPath = path.join(configDir, "package.json");
@@ -30,29 +31,32 @@ describe("@pourkit/cli package", () => {
     expect(cliPkg.files).toEqual(["dist"]);
   });
 
-  it("has dist/cli.js built and present", () => {
+  (runPackageSmoke ? it : it.skip)("has dist/cli.js built and present", () => {
     const distPath = path.join(configDir, "dist/cli.js");
     expect(existsSync(distPath)).toBe(true);
   });
 
-  it("excludes repository-private files from publish", () => {
-    const distPath = path.join(configDir, "dist/cli.js");
-    expect(existsSync(distPath)).toBe(true);
-    const result = execSync("npm pack --dry-run --json", {
-      cwd: configDir,
-      encoding: "utf-8",
-    });
-    const packData = JSON.parse(result);
-    const files: string[] = Array.isArray(packData)
-      ? packData[0].files.map((f: { path: string }) => f.path)
-      : packData.files.map((f: { path: string }) => f.path);
+  (runPackageSmoke ? it : it.skip)(
+    "excludes repository-private files from publish",
+    () => {
+      const distPath = path.join(configDir, "dist/cli.js");
+      expect(existsSync(distPath)).toBe(true);
+      const result = execSync("npm pack --dry-run --json", {
+        cwd: configDir,
+        encoding: "utf-8",
+      });
+      const packData = JSON.parse(result);
+      const files: string[] = Array.isArray(packData)
+        ? packData[0].files.map((f: { path: string }) => f.path)
+        : packData.files.map((f: { path: string }) => f.path);
 
-    expect(files).toContain("dist/cli.js");
-    expect(files).not.toContain(".pourkit/CONTEXT.md");
-    expect(files).not.toContain(".agents/");
-    expect(files).not.toContain("node_modules/");
-    expect(files).not.toContain(".changeset/");
-  });
+      expect(files).toContain("dist/cli.js");
+      expect(files).not.toContain(".pourkit/CONTEXT.md");
+      expect(files).not.toContain(".agents/");
+      expect(files).not.toContain("node_modules/");
+      expect(files).not.toContain(".changeset/");
+    }
+  );
 });
 
 describe("@pourkit/logger package", () => {

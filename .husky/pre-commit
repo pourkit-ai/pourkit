@@ -1,3 +1,5 @@
+unset $(git rev-parse --local-env-vars)
+
 npx lint-staged
 npm run prettier:check
 npm run typecheck
