@@ -97,6 +97,13 @@ function isReleaseVersion(value: string | undefined): value is string {
   );
 }
 
+function isPackageVersion(value: string | undefined): value is string {
+  return (
+    typeof value === "string" &&
+    /^\d+\.\d+\.\d+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$/.test(value)
+  );
+}
+
 async function handleError(
   logger: {
     step: (level: string, message: string) => void;
@@ -512,6 +519,10 @@ export function createCliProgram(version: string): Command {
 }
 
 export async function resolveCliVersion(): Promise<string> {
+  if (isPackageVersion(process.env.POURKIT_CLI_VERSION)) {
+    return process.env.POURKIT_CLI_VERSION;
+  }
+
   if (isReleaseVersion(process.env.POURKIT_CLI_VERSION)) {
     return process.env.POURKIT_CLI_VERSION;
   }
