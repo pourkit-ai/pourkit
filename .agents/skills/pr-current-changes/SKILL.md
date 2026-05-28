@@ -26,7 +26,7 @@ Use the diff to understand the final net change and to detect secrets, generated
 
 Ask the user:
 
-- Which branch should the PR target? Default to the current HEAD branch; second option is to provide a custom branch.
+- Which branch should the PR target? Resolve an explicit branch name. Default to the current branch name, but always capture the exact string to pass as `--base`.
 - How should merge be handled after PR creation? Default to merge after checks are green; second option is to leave open.
 
 Do not target `master` unless the user explicitly selects it.
@@ -97,13 +97,7 @@ Use bullet points only. Do not include commit lists or development chronology.
 
 Use `pourkit pr create`; never shell out to external GitHub tooling for PR creation.
 
-For the default (current HEAD) target:
-
-```bash
-pourkit pr create --target default --title "<type>: <desc>" --body-file <body-file>
-```
-
-For an explicitly provided custom base branch:
+Always pass `--base <branch>` with the explicitly resolved branch name. Do not rely on the target policy to infer the user-selected base branch.
 
 ```bash
 pourkit pr create --target default --base <branch> --title "<type>: <desc>" --body-file <body-file>
@@ -136,5 +130,6 @@ After merging, switch back to `$original_branch`.
 - Write PR body to `.pourkit/.tmp/` (repo-local, not `/tmp/`).
 - Clean up `.pourkit/.tmp/pr-body.md` after PR creation.
 - Return to `$original_branch` after merge handling.
+- Always pass `--base <branch>` to `pourkit pr create`, even when using the current branch as the PR target — target policy does not imply the user-selected branch.
 - Ask before including ambiguous changes or targeting `master`.
 - Do not amend existing commits unless the user explicitly asks.
