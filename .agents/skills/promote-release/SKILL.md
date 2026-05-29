@@ -47,6 +47,8 @@ Fetch the latest remote refs and verify both source and target are the intended 
 
 Use the `changeset` skill when the decision is unclear.
 
+If a catch-up Changeset is required, create it on the promotion branch after merging the source branch into the target branch. Do not open the PR while the Changeset only exists in the working tree.
+
 ### 4. Create A Promotion Branch
 
 Create a short-lived promotion branch from the target branch, then merge the source branch into it using normal git merge behavior. Resolve conflicts only when safe and obvious; otherwise stop and ask.
@@ -57,7 +59,35 @@ Example branch names:
 - `promote/next-to-main-<date>`
 - `promote/main-to-next-hotfix-<date>`
 
-### 5. Create The PR
+If Step 3 identified a missing Changeset, create the catch-up `.changeset/*.md` file now, then commit it before creating the PR:
+
+```bash
+git status --short
+git add .changeset/<file>.md
+git commit -m "chore: add catch-up changeset for <source>-to-<target> promotion"
+```
+
+Only stage the catch-up Changeset file unless another intended promotion file is explicitly part of the fix. Do not include unrelated worktree changes.
+
+### 5. Verify Promotion Branch Contents
+
+Before opening the PR, verify that the branch contains every intended promotion change and no intended files are left unstaged:
+
+```bash
+git status --short
+git diff <target-branch>...HEAD --stat
+git diff <target-branch>...HEAD -- .changeset
+```
+
+If a catch-up Changeset was required, the `.changeset/*.md` file must appear in `git diff <target-branch>...HEAD`. If it does not, stop and commit or push the missing Changeset before PR creation.
+
+Push the promotion branch only after this verification passes:
+
+```bash
+git push origin <promotion-branch>
+```
+
+### 6. Create The PR
 
 Use `pourkit pr create`; never shell out to external GitHub tooling for PR creation.
 
@@ -67,7 +97,9 @@ pourkit pr create --target default --base <target-branch> --title "chore: promot
 
 Write the body to `.pourkit/.tmp/pr-body.md`, summarize the branch-to-branch promotion, then remove the temp file after PR creation.
 
-### 6. Merge Only When Requested
+If a catch-up Changeset was created during promotion, mention it in the PR body. Keep the title as `chore: promote <source> to <target>` unless the user asks for a more specific title.
+
+### 7. Merge Only When Requested
 
 Do not auto-merge promotion PRs unless the user explicitly requested merge handling. If requested, wait for checks and merge with:
 
