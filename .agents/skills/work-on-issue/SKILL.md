@@ -31,10 +31,17 @@ Read the relevant domain docs before exploring code:
 
 ### 3. Fetch, sync target, and create branch
 
+Resolve the PR target before creating the branch:
+
+- Child issue work for a PRD targets the matching `PRD-00N` branch.
+- One-off issue work targets `dev` by default.
+- Hotfix issue work targets the relevant `hotfix/<slug>` branch or `main` only when the user explicitly chooses the hotfix flow.
+
+Use the resolved target branch in place of `<target-branch>`:
+
 ```bash
-git fetch origin next
-git branch --force next origin/next
-git checkout -b agent/<issue-title-slug> next
+git fetch origin <target-branch>
+git checkout -b agent/<issue-title-slug> origin/<target-branch>
 ```
 
 The `<issue-title-slug>` is a kebab-cased slug of the issue title (e.g. `agent/pourkit-delete-legacy-pipeline`).
@@ -52,6 +59,14 @@ Now begin implementation.
 ### 6. Commit changes
 
 Use conventional commits with bullet-list bodies for non-trivial changes. See `.pourkit/docs/agents/commit-style.md` for the full policy.
+
+Before committing, decide Changeset handling based on the target branch:
+
+- Target `PRD-00N`: no Changeset by default; the final `PRD-00N -> dev` PR carries the summarized product-increment Changeset when user-facing.
+- Target `dev`: add a Changeset only when the issue is user-facing.
+- Target `next` or `main`: include a Changeset or ensure the PR receives `no-changeset-needed`.
+
+Use the `changeset` skill when the user-facing decision or bump type is unclear.
 
 ```text
 <type>: <short imperative summary>

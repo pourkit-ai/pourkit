@@ -1777,6 +1777,78 @@ describe("runIssueCommand", () => {
     ).toBe(true);
   });
 
+  it("reset-worktree deletes detached issue worktree left by conflicted rebase", async () => {
+    let worktreeListCallCount = 0;
+    let showRefCallCount = 0;
+
+    execCaptureMock.mockImplementation(async (command, args) => {
+      if (command === "git" && args[0] === "worktree" && args[1] === "list") {
+        worktreeListCallCount++;
+        if (worktreeListCallCount === 1) {
+          return {
+            code: 0,
+            stdout: [
+              "worktree /tmp/pourkit-issue-test/.sandcastle/worktrees/pourkit-42-test-issue",
+              "HEAD abc123",
+              "detached",
+              "",
+            ].join("\n"),
+            stderr: "",
+          };
+        }
+        return { code: 0, stdout: "", stderr: "" };
+      }
+
+      if (command === "git" && args[0] === "show-ref") {
+        showRefCallCount++;
+        if (showRefCallCount === 1) {
+          return { code: 0, stdout: "", stderr: "" };
+        }
+        throw new Error("branch not found");
+      }
+
+      return { code: 0, stdout: "", stderr: "" };
+    });
+
+    const config = makeConfig();
+    const issueProvider = new FakeIssueProvider([
+      makeIssue({ labels: ["ready-for-agent"] }),
+    ]);
+    const prProvider = makePrProvider();
+    const logger = makeLogger();
+
+    vi.mocked(prProvider.getPr).mockResolvedValue(null);
+
+    await runIssueCommand({
+      issueNumber: 42,
+      config,
+      issueProvider,
+      prProvider,
+      executionProvider,
+      force: false,
+      resetWorktree: true,
+      logger,
+      repoRoot: "/tmp/pourkit-issue-test",
+    });
+
+    expect(execCaptureMock).toHaveBeenCalledWith(
+      "git",
+      [
+        "worktree",
+        "remove",
+        "--force",
+        "/tmp/pourkit-issue-test/.sandcastle/worktrees/pourkit-42-test-issue",
+      ],
+      expect.anything()
+    );
+
+    expect(execCaptureMock).toHaveBeenCalledWith(
+      "git",
+      expect.arrayContaining(["branch", "-D"]),
+      expect.anything()
+    );
+  });
+
   it("moves issue to ready-for-human if start transition partially fails", async () => {
     const config = makeConfig();
 
@@ -3192,6 +3264,7 @@ describe("runIssueCommand", () => {
       "git",
       [
         "commit",
+        "--no-verify",
         "-m",
         "chore: Refactor Loop Generated Title",
         "-m",
@@ -6010,6 +6083,7 @@ describe("runIssueCommand", () => {
       "git",
       [
         "commit",
+        "--no-verify",
         "-m",
         "chore: Test issue",
         "-m",

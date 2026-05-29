@@ -92,6 +92,38 @@ _Avoid_: Failure, escalation without context
 A structured **Artifact** written by a **Refactor** attempt that records how each **Reviewer** finding was handled, verification performed, and open blockers.
 _Avoid_: Refactor summary, chat response, fix log
 
+**Release Lane**:
+A protected branch that carries a distinct publish contract for the Pourkit CLI.
+_Avoid_: Environment, deployment branch
+
+**Integration Branch**:
+The protected `dev` branch where completed one-off work and completed PRD product increments accumulate before promotion to a Release Lane.
+_Avoid_: Development release lane, staging branch
+
+**PRD Branch**:
+A temporary branch named exactly `PRD-00N`, created from `dev`, that receives child Issue PRs for one PRD before a final PR back to `dev`.
+_Avoid_: Release branch, feature branch (when referring to PRD-scoped queue work)
+
+**Promotion PR**:
+A branch-to-branch PR that moves already-merged work forward through the release topology, such as `dev -> next`, `next -> main`, or hotfix reconciliation.
+_Avoid_: Feature PR, local publish
+
+**Hotfix**:
+An urgent stable-user fix branched from `main` as `hotfix/<slug>`, merged back to `main`, then reconciled forward to `next` and `dev`.
+_Avoid_: Normal patch release, workaround
+
+**Development Release**:
+An automated npm snapshot of `@pourkit/cli` published from the `next` **Release Lane** under the `next` dist-tag for dogfooding.
+_Avoid_: Canary, beta, develop build
+
+**Stable Release**:
+An npm release of `@pourkit/cli` published from the `main` **Release Lane** under the `latest` dist-tag after a Changesets Version Packages PR is merged.
+_Avoid_: Production deploy, final build
+
+**Changeset**:
+A release-note and version-intent file required for user-facing changes so Changesets can calculate the next stable version and changelog.
+_Avoid_: Changelog entry, release note file
+
 ## Relationships
 
 - A **Target** selects one **Strategy** for processing an **Issue**
@@ -116,6 +148,13 @@ _Avoid_: Refactor summary, chat response, fix log
 - **Finding Lineage** connects **Reviewer** findings across iterations via IDs and `Supersedes` links
 - A **Provider** or **Command** uses the **GitHub API Client** for Octokit-backed GitHub API operations while local repository operations remain `git`
 - **Human Handoff** moves the **Issue** to `ready-for-human` when agent iteration should stop
+- Pourkit uses `dev` as the **Integration Branch** for completed work before release promotion
+- Pourkit uses `PRD-00N` **PRD Branches** for PRD-scoped Queue work: child Issue PRs merge into the PRD Branch, then the completed PRD Branch merges to `dev`
+- Pourkit uses `next` and `main` as **Release Lanes**: `next` publishes **Development Releases**, while `main` publishes **Stable Releases**
+- **Promotion PRs** move already-merged work through the branch topology: `dev -> next`, `next -> main`, and hotfix reconciliation `main -> next -> dev`
+- A **Hotfix** lands on `main` with its own **Changeset**, then reconciles forward to `next` and `dev` without new Changesets by default
+- User-facing Changeset placement depends on branch flow: one-off `dev` PRs carry their own Changesets, child PRD Issue PRs usually do not, final `PRD-00N -> dev` PRs carry one summarized Changeset when user-facing, and `next -> main` promotion does not invent new Changesets
+- Internal-only PRs targeting `next` or `main` explicitly opt out with the `no-changeset-needed` label; the label is optional elsewhere and normally not used
 
 ## Example Dialogue
 
@@ -132,3 +171,4 @@ _Avoid_: Refactor summary, chat response, fix log
 
 - Builder and older implementation-role wording were both plausible; resolved: use **Builder** for the implementation agent role (legacy references in config rejection guards are historical and kept as-is).
 - "agent" was overloaded; resolved: qualify with role (Builder, Reviewer, Refactor, Conflict Resolution Agent, PR Description Agent).
+- "development release" was ambiguous with Git Flow `develop`; resolved: use **Development Release** for npm snapshots from the `next` **Release Lane**, not a separate environment.

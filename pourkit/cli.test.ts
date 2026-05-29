@@ -828,15 +828,15 @@ describe("pourkit cli", () => {
     expect(version).toBe("v1.8.0-release-candidate.1");
   });
 
-  it("ignores invalid packaged CLI versions", async () => {
+  it("accepts exact npm package version without leading v prefix", async () => {
     process.env.POURKIT_CLI_VERSION = "1.8.0-next.84";
 
     const { resolveCliVersion } = await import("./cli");
     const version = await resolveCliVersion();
 
-    expect(version).toBe("v1.8.0-next.81");
-    expect(repoRootMock).toHaveBeenCalled();
-    expect(execCaptureMock).toHaveBeenCalled();
+    expect(version).toBe("1.8.0-next.84");
+    expect(repoRootMock).not.toHaveBeenCalled();
+    expect(execCaptureMock).not.toHaveBeenCalled();
   });
 
   it("prints help and exits with a non-zero code when no args are provided", async () => {

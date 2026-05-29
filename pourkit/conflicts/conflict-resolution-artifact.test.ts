@@ -300,4 +300,74 @@ describe("parseConflictResolutionArtifact", () => {
       ConflictResolutionArtifactProtocolError
     );
   });
+
+  it("parses artifact with optional verification section", () => {
+    const output = [
+      "## Status",
+      "",
+      "resolved",
+      "",
+      "## Summary",
+      "",
+      "- Preserved latest baseBranch behavior.",
+      "",
+      "## Files",
+      "",
+      "- `src/foo.ts`",
+      "",
+      "## Verification",
+      "",
+      "| Command | Result | Notes |",
+      "|---------|--------|-------|",
+      "| npm test | passed | All tests pass |",
+      "| npm run typecheck | passed | No type errors |",
+      "",
+      "<conflict-resolution>resolved</conflict-resolution>",
+    ].join("\n");
+    const result = parseConflictResolutionArtifact(output);
+    expect(result.status).toBe("resolved");
+    expect(result.files).toEqual(["src/foo.ts"]);
+    expect(result.verification).toBeDefined();
+    expect(result.verification).toHaveLength(2);
+    expect(result.verification![0]).toEqual({
+      command: "npm test",
+      result: "passed",
+      notes: "All tests pass",
+    });
+    expect(result.verification![1]).toEqual({
+      command: "npm run typecheck",
+      result: "passed",
+      notes: "No type errors",
+    });
+  });
+
+  it("parses artifact without verification section when not present", () => {
+    const result = parseConflictResolutionArtifact(validResolvedOutput());
+    expect(result.verification).toBeUndefined();
+  });
+
+  it("parses artifact with empty verification table", () => {
+    const output = [
+      "## Status",
+      "",
+      "resolved",
+      "",
+      "## Summary",
+      "",
+      "- Preserved latest baseBranch behavior.",
+      "",
+      "## Files",
+      "",
+      "- `src/foo.ts`",
+      "",
+      "## Verification",
+      "",
+      "| Command | Result | Notes |",
+      "|---------|--------|-------|",
+      "",
+      "<conflict-resolution>resolved</conflict-resolution>",
+    ].join("\n");
+    const result = parseConflictResolutionArtifact(output);
+    expect(result.verification).toEqual([]);
+  });
 });
