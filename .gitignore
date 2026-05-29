@@ -10,7 +10,6 @@ pourkit/tmp/
 pourkit.config.json
 pourkit.config.ts
 .serena/
-.pourkit/handoffs/
 .pourkit/strategy.ts
 .pourkit/sandbox.ts
 .env
