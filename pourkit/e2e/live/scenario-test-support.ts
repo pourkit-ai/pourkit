@@ -4,6 +4,7 @@ import { runIssueCommand } from "../../commands/issue";
 import { runQueueCommand } from "../../commands/queue-run";
 import type { RunQueueOutcome } from "../../commands/queue-run";
 import { DeterministicExecutionProvider } from "../../execution/deterministic-agent";
+import type { ExecutionProvider } from "../../execution/execution-provider";
 import { makeE2EConfig, resolveE2EConfigFile } from "../run-live-e2e";
 import {
   createLogger,
@@ -96,8 +97,10 @@ export const describeLive =
 
 export interface LiveScenarioOptions {
   fullCheck?: boolean;
+  executionProvider?: ExecutionProvider;
   executionInjections?: ScenarioExecutionInjections;
   prInjections?: ScenarioPrInjections;
+  issue?: { title?: string; body?: string };
   prepareIssue?: (issueNumber: number, client: GitHubClient) => Promise<void>;
   mutateConfig?: (config: PourkitConfig) => PourkitConfig;
 }
@@ -149,6 +152,8 @@ export async function createLiveScenario(
   const root = repoRoot();
   const runId = generateRunId();
   const targetName = resolveLiveTargetName();
+  const baseConfig = await loadRepoConfig(root, resolveE2EConfigFile(root));
+  const baseTarget = resolveTarget(baseConfig, targetName);
   const livePrTitle = resolveLivePrTitle(`E2E Test Issue ${runId}`);
   const logPath = path.join(root, ".pourkit", "logs", `e2e-${runId}.log`);
   const logger = createLogger("e2e", logPath);
@@ -162,7 +167,7 @@ export async function createLiveScenario(
     },
   };
   const executionProvider = new ScenarioExecutionProvider(
-    new DeterministicExecutionProvider(),
+    options.executionProvider ?? new DeterministicExecutionProvider(),
     executionInjections
   );
   const prProvider = new ScenarioPrProvider(
@@ -173,7 +178,11 @@ export async function createLiveScenario(
   const resources: E2EResources = {};
 
   try {
-    const targetBranch = await createLiveTargetBranch(runId, logger);
+    const targetBranch = await createLiveTargetBranch(
+      runId,
+      logger,
+      baseTarget.baseBranch
+    );
     resources.targetBranch = targetBranch;
     await persistResources(root, runId, resources);
 
@@ -182,7 +191,8 @@ export async function createLiveScenario(
       targetBranch,
       logger,
       client,
-      livePrTitle
+      options.issue?.title ?? livePrTitle,
+      options.issue?.body
     );
     resources.issueNumber = createdIssue.number;
     resources.issueUrl = createdIssue.url;
@@ -192,7 +202,6 @@ export async function createLiveScenario(
       await options.prepareIssue(createdIssue.number, client);
     }
 
-    const baseConfig = await loadRepoConfig(root, resolveE2EConfigFile(root));
     const config = (options.mutateConfig ?? ((value) => value))(
       makeE2EConfig(
         baseConfig,

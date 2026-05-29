@@ -95,29 +95,33 @@ describe("live E2E harness", () => {
     });
   });
 
-  it("creates a recreated target branch from origin/e2e", async () => {
-    vi.mocked(execCapture).mockResolvedValueOnce({
-      code: 0,
-      stdout: "",
-      stderr: "",
-    });
-    vi.mocked(execCapture).mockResolvedValueOnce({
+  it("creates a recreated target branch from the configured base branch", async () => {
+    vi.mocked(execCapture).mockResolvedValue({
       code: 0,
       stdout: "",
       stderr: "",
     });
 
     const logger = makeLogger();
-    const branch = await createLiveTargetBranch("run-123", logger as never);
+    const branch = await createLiveTargetBranch(
+      "run-123",
+      logger as never,
+      "next"
+    );
 
     expect(branch).toBe("pourkit-e2e-target/run-123");
     expect(execCapture).toHaveBeenNthCalledWith(1, "git", [
+      "fetch",
+      "origin",
+      "next:refs/remotes/origin/next",
+    ]);
+    expect(execCapture).toHaveBeenNthCalledWith(2, "git", [
       "branch",
       "--force",
       "pourkit-e2e-target/run-123",
-      "origin/e2e",
+      "origin/next",
     ]);
-    expect(execCapture).toHaveBeenNthCalledWith(2, "git", [
+    expect(execCapture).toHaveBeenNthCalledWith(3, "git", [
       "push",
       "--no-verify",
       "-u",
