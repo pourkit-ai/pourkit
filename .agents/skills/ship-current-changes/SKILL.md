@@ -1,11 +1,13 @@
 ---
-name: pr-current-changes
-description: Turn the current git changes into a dedicated-branch pull request, with optional direct merge. Use when the user says to create a PR from current changes, PR current changes, ship these changes, target next, or automerge local work.
+name: ship-current-changes
+description: Ship current changes, create a PR from current changes, PR current changes, ship these changes, or automerge local work by turning the current git diff into a dedicated-branch pull request. Use promote-release instead for clean branch promotions.
 ---
 
-# pr-current-changes
+# ship-current-changes
 
 Create a pull request from the current worktree changes without implementing new feature work.
+
+Use this skill for one-off current-diff PRs. Use `promote-release` instead when moving already-merged work between long-lived branches such as `dev -> next` or `next -> main`.
 
 ## Workflow
 
@@ -26,7 +28,7 @@ Use the diff to understand the final net change and to detect secrets, generated
 
 Ask the user:
 
-- Which branch should the PR target? Resolve an explicit branch name. Default to the current branch name, but always capture the exact string to pass as `--base`.
+- Which branch should the PR target? Resolve an explicit branch name. Default one-off work to `dev` unless the user names another branch.
 - How should merge be handled after PR creation? Default to merge after checks are green; second option is to leave open.
 
 ### 3. Ensure the current branch is up-to-date
@@ -49,7 +51,18 @@ git switch -c chore/<short-change-slug>
 
 If the current branch already has pushed commits or unrelated work, ask before reusing it. Never force-reset, discard, or overwrite user changes.
 
-### 5. Commit current changes
+### 5. Decide Changeset handling
+
+Before committing, decide whether the final diff is user-facing and whether the target branch requires a Changeset decision:
+
+- For a one-off PR targeting `dev`, add a Changeset only when the change is user-facing.
+- For a PR targeting `next` or `main`, include either a `.changeset/*.md` file or ensure the PR receives the `no-changeset-needed` label.
+- For mundane `chore`, `test`, `docs`, `build`, CI, and internal-only refactor changes, skip a Changeset by default.
+- If the decision is unclear, follow the `changeset` skill before committing.
+
+User-facing means the published CLI behavior, commands, configuration, errors, generated files, workflow outcomes, or release-relevant documentation changes for users.
+
+### 6. Commit current changes
 
 Stage only the intended files. Follow `.pourkit/docs/agents/commit-style.md`:
 
@@ -62,7 +75,7 @@ Stage only the intended files. Follow `.pourkit/docs/agents/commit-style.md`:
 
 Use no body for obvious one-line changes. Do not commit secrets, local-only files, or unrelated changes.
 
-### 6. Push the branch
+### 7. Push the branch
 
 Push the dedicated branch:
 
@@ -70,7 +83,7 @@ Push the dedicated branch:
 git push -u origin HEAD
 ```
 
-### 7. Create PR title and body
+### 8. Create PR title and body
 
 Write the PR body to `.pourkit/.tmp/pr-body.md` (a repo-local temp path, gitignored by Pourkit).
 
@@ -98,7 +111,7 @@ PR body format:
 
 Use bullet points only. Do not include commit lists or development chronology.
 
-### 8. Create the pull request
+### 9. Create the pull request
 
 Use `pourkit pr create`; never shell out to external GitHub tooling for PR creation.
 
@@ -112,7 +125,7 @@ Capture and report the PR URL.
 
 After the PR is created, remove `.pourkit/.tmp/pr-body.md`.
 
-### 9. Optional merge handling
+### 10. Optional merge handling
 
 If the user chose leave open, switch back to `$original_branch` and stop.
 
@@ -130,7 +143,7 @@ git switch "$original_branch"
 
 If `$original_branch` is the PR target branch, update it from its upstream. If it is not, ask whether the user wants the merged changes brought onto `$original_branch`, and if so, which strategy to use.
 
-### 10. Stay within scope
+### 11. Stay within scope
 
 Only perform the steps above. Ask before doing anything outside this workflow, especially rebasing, force-pushing, resetting, or other history-altering branch operations.
 
@@ -140,6 +153,7 @@ Only perform the steps above. Ask before doing anything outside this workflow, e
 - Keep user changes intact; never revert unrelated edits.
 - Create or use a dedicated topic branch before committing current changes.
 - Stage only intended files.
+- Decide Changeset handling before committing.
 - Use `pourkit pr create` for PR creation.
 - Use `pourkit pr merge` for PR merging; do not shell out to external GitHub tooling for PR merging.
 - Write PR body to `.pourkit/.tmp/` (repo-local, not `/tmp/`).
