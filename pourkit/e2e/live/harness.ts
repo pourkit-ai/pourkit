@@ -492,15 +492,18 @@ export async function createE2EIssue(
   targetBranch: string,
   logger: PourkitLogger,
   client: GitHubClient,
-  title = `E2E Test Issue ${runId}`
+  title = `E2E Test Issue ${runId}`,
+  body?: string
 ): Promise<{ number: number; url: string }> {
-  const body = [
-    `This is an automatically created E2E test issue for run ${runId}.`,
-    "",
-    `Target branch: ${targetBranch}`,
-    "",
-    "This issue should be processed by the deterministic agent and cleaned up after the test completes.",
-  ].join("\n");
+  const issueBody =
+    body ??
+    [
+      `This is an automatically created E2E test issue for run ${runId}.`,
+      "",
+      `Target branch: ${targetBranch}`,
+      "",
+      "This issue should be processed by the deterministic agent and cleaned up after the test completes.",
+    ].join("\n");
 
   logger.step("issue", `Creating GitHub issue: "${title}"`);
 
@@ -508,7 +511,7 @@ export async function createE2EIssue(
     owner: client.owner,
     repo: client.repo,
     title,
-    body,
+    body: issueBody,
     labels: ["ready-for-agent", "type:infra", "pourkit-e2e"],
   });
 
@@ -518,11 +521,22 @@ export async function createE2EIssue(
 
 export async function createLiveTargetBranch(
   runId: string,
-  logger: PourkitLogger
+  logger: PourkitLogger,
+  baseBranch = "main"
 ): Promise<string> {
   const targetBranch = `pourkit-e2e-target/${runId}`;
   logger.step("git", `Creating target branch: ${targetBranch}`);
-  await execCapture("git", ["branch", "--force", targetBranch, "origin/e2e"]);
+  await execCapture("git", [
+    "fetch",
+    "origin",
+    `${baseBranch}:refs/remotes/origin/${baseBranch}`,
+  ]);
+  await execCapture("git", [
+    "branch",
+    "--force",
+    targetBranch,
+    `origin/${baseBranch}`,
+  ]);
   await execCapture("git", [
     "push",
     "--no-verify",
