@@ -25,6 +25,7 @@
     "@pourkit/logger": "*"
   },
   "dependencies": {
+    "@ai-hero/sandcastle": "^0.6.3",
     "@clack/prompts": "^0.10.1",
     "commander": "^14.0.3",
     "octokit": "^5.0.5",
