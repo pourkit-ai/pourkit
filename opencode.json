@@ -60,5 +60,16 @@
         "task": "deny"
       }
     }
+  },
+  "mcp": {
+    "context-engine": {
+      "type": "local",
+      "command": [
+        "/home/jacob/.local/bin/cce",
+        "serve",
+        "--project-dir",
+        "/home/jacob/repos/pourkit"
+      ]
+    }
   }
 }
