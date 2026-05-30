@@ -1,6 +1,30 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "agent": {
+    "pourkit-architect": {
+      "mode": "primary",
+      "description": "Primary orchestration agent for Pourkit architectural lifecycle management. Owns initiative continuity, exploration routing, compression, roadmap evolution, PRD orchestration, issue orchestration, reconciliation, and drift prevention.",
+      "reasoningEffort": "high",
+      "temperature": 0.2,
+      "prompt": "{file:.pourkit/prompts/pourkit-architect.prompt.md}",
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "edit": "allow",
+        "bash": {
+          "*": "deny"
+        },
+        "task": {
+          "*": "deny",
+          "pourkit-architecture-compressor": "allow",
+          "pourkit-architecture-reconciler": "allow",
+          "advisory-analyzer": "allow"
+        }
+      }
+    },
+
     "pourkit-builder": {
       "mode": "primary",
       "hidden": true,
@@ -14,6 +38,7 @@
         }
       }
     },
+
     "pourkit-reviewer": {
       "mode": "primary",
       "hidden": true,
@@ -22,6 +47,7 @@
         "task": "deny"
       }
     },
+
     "pourkit-refactor": {
       "mode": "primary",
       "hidden": true,
@@ -35,6 +61,7 @@
         }
       }
     },
+
     "pourkit-pr-description": {
       "mode": "primary",
       "hidden": true,
@@ -45,10 +72,51 @@
         "task": "deny"
       }
     },
+
+    "pourkit-architecture-compressor": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Compresses large architectural exploration sessions into durable initiative state under .pourkit/architecture.",
+      "reasoningEffort": "medium",
+      "temperature": 0.1,
+      "prompt": "{file:.pourkit/prompts/pourkit-architecture-compressor.prompt.md}",
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "edit": "allow",
+        "bash": {
+          "*": "deny"
+        },
+        "task": "deny"
+      }
+    },
+
+    "pourkit-architecture-reconciler": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Reconciles completed PRDs/issues against initiative roadmap, locked decisions, and architectural state.",
+      "reasoningEffort": "medium",
+      "temperature": 0.1,
+      "prompt": "{file:.pourkit/prompts/pourkit-architecture-reconciler.prompt.md}",
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "edit": "allow",
+        "bash": {
+          "*": "deny"
+        },
+        "task": "deny"
+      }
+    },
+
     "advisory-analyzer": {
       "mode": "subagent",
       "hidden": true,
-      "description": "Provides bounded advisory analysis for Pourkit Builder and Refactor only.",
+      "description": "Provides bounded advisory analysis for Pourkit Builder, Refactor, and Architect.",
       "prompt": "{file:.pourkit/prompts/advisory-analyzer.prompt.md}",
       "permission": {
         "read": "allow",
