@@ -163,6 +163,8 @@ function resolveSerenaRuntimeConfig(
     required: target.serena?.required ?? config.serena.required,
     autoStart: config.serena.autoStart,
     dataDir: config.serena.dataDir,
+    mcpUrl: config.serena.mcpUrl,
+    sandboxMcpUrl: config.serena.sandboxMcpUrl,
   };
 }
 
@@ -235,6 +237,7 @@ export async function startIssueRun(
       targetName: target.name,
       baseBranch: target.baseBranch,
       dataDir: serenaRuntimeConfig.dataDir,
+      mcpUrl: serenaRuntimeConfig.mcpUrl,
       enabled: shouldPrepareSerena,
       required: serenaRuntimeConfig.required,
       autoStart: serenaRuntimeConfig.autoStart,
@@ -244,7 +247,7 @@ export async function startIssueRun(
     if (serenaPreflight.enabled && serenaPreflight.available) {
       serenaExecutionContext = {
         available: true,
-        sandboxMcpUrl: config.serena.sandboxMcpUrl,
+        sandboxMcpUrl: serenaRuntimeConfig.sandboxMcpUrl,
       };
     }
 

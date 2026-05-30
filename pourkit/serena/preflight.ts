@@ -15,6 +15,7 @@ export interface PrepareSerenaForTargetOptions {
   targetName: string;
   baseBranch: string;
   dataDir: string;
+  mcpUrl: string;
   enabled: boolean;
   required: boolean;
   autoStart: boolean;
@@ -26,17 +27,36 @@ export type SerenaPreflightResult =
   | { enabled: true; available: true; mcpUrl: string }
   | { enabled: true; available: false; error: string };
 
-function sidecarOptions(paths: {
-  baselineWorktreePath: string;
-  dataDir: string;
-}) {
+function sidecarOptions(
+  paths: {
+    baselineWorktreePath: string;
+    dataDir: string;
+  },
+  mcpUrl: string
+) {
   return {
     baselineWorktreePath: paths.baselineWorktreePath,
     dataDir: paths.dataDir,
     mcpPort: SERENA_MCP_PORT,
     dashboardPort: SERENA_DASHBOARD_PORT,
     image: SERENA_IMAGE,
+    mcpUrl,
   };
+}
+
+async function canReachMcp(url: string): Promise<boolean> {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    try {
+      await fetch(url, { method: "GET", signal: AbortSignal.timeout(500) });
+      return true;
+    } catch {
+      if (attempt < 9) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    }
+  }
+
+  return false;
 }
 
 function formatError(error: unknown): string {
@@ -62,14 +82,17 @@ export async function prepareSerenaForTarget(
     });
 
     const status = options.autoStart
-      ? await startSerenaSidecar(sidecarOptions(paths))
-      : await getSerenaSidecarStatus(sidecarOptions(paths));
+      ? await startSerenaSidecar(sidecarOptions(paths, options.mcpUrl))
+      : await getSerenaSidecarStatus(sidecarOptions(paths, options.mcpUrl));
+    const mcpReachable = await canReachMcp(options.mcpUrl);
 
-    if (!status.running) {
+    if (!mcpReachable) {
       return {
         enabled: true,
         available: false,
-        error: `Serena sidecar is not running for target ${options.targetName}`,
+        error: status.running
+          ? `Serena MCP is not reachable at ${options.mcpUrl}`
+          : `Serena sidecar is not running for target ${options.targetName}`,
       };
     }
 
@@ -82,7 +105,7 @@ export async function prepareSerenaForTarget(
     return {
       enabled: true,
       available: true,
-      mcpUrl: status.mcpUrl,
+      mcpUrl: options.mcpUrl,
     };
   } catch (error) {
     return {

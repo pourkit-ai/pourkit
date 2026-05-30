@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   loadConfig,
   loadRepoConfig,
@@ -38,6 +38,11 @@ const finalizer = {
   model: "opencode-go/deepseek-v4-flash",
   promptTemplate: "finalizer.prompt.md",
 };
+
+afterEach(() => {
+  delete process.env.POURKIT_SERENA_MCP_URL;
+  delete process.env.POURKIT_SERENA_SANDBOX_MCP_URL;
+});
 
 function strategy(
   overrides: Partial<ReviewRefactorLoopStrategy> = {}
@@ -141,6 +146,16 @@ describe("parseConfig", () => {
     expect(() =>
       parseConfig(rawConfig({ serena: { sandboxMcpUrl: "" } }))
     ).toThrow("serena.sandboxMcpUrl must be a non-empty string");
+  });
+
+  it("overrides Serena MCP URLs from environment", () => {
+    process.env.POURKIT_SERENA_MCP_URL = "http://host.example/mcp";
+    process.env.POURKIT_SERENA_SANDBOX_MCP_URL = "http://sandbox.example/mcp";
+
+    const config = parseConfig(rawConfig());
+
+    expect(config.serena.mcpUrl).toBe("http://host.example/mcp");
+    expect(config.serena.sandboxMcpUrl).toBe("http://sandbox.example/mcp");
   });
 
   it("parses sandbox copyToWorktree entries", () => {

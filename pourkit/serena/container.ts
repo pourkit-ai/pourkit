@@ -8,6 +8,7 @@ export interface SerenaSidecarOptions {
   mcpPort: number;
   dashboardPort: number;
   image: string;
+  mcpUrl?: string;
   containerName?: string;
 }
 
@@ -31,7 +32,7 @@ type DockerInspectResult = {
 function resolveSidecarUrls(options: SerenaSidecarOptions) {
   return {
     containerName: options.containerName ?? DEFAULT_CONTAINER_NAME,
-    mcpUrl: `http://localhost:${options.mcpPort}/mcp`,
+    mcpUrl: options.mcpUrl ?? `http://localhost:${options.mcpPort}/mcp`,
     dashboardUrl: `http://localhost:${options.dashboardPort}`,
   };
 }
@@ -117,6 +118,21 @@ export async function startSerenaSidecar(
   await execCapture("docker", buildStartArgs(options, containerName));
 
   return readSidecarStatus(options);
+}
+
+export async function indexSerenaProject(
+  options: SerenaSidecarOptions
+): Promise<void> {
+  const { containerName } = resolveSidecarUrls(options);
+  await execCapture("docker", [
+    "exec",
+    containerName,
+    "serena",
+    "project",
+    "create",
+    "--index",
+    "/workspaces/pourkit",
+  ]);
 }
 
 export async function stopSerenaSidecar(

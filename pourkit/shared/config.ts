@@ -646,6 +646,23 @@ export function parseConfig(raw: unknown): PourkitConfig {
     };
   });
 
+  const serena = {
+    ...data.serena,
+    mcpUrl: process.env.POURKIT_SERENA_MCP_URL ?? data.serena.mcpUrl,
+    sandboxMcpUrl:
+      process.env.POURKIT_SERENA_SANDBOX_MCP_URL ?? data.serena.sandboxMcpUrl,
+  };
+
+  if (serena.mcpUrl.trim() === "") {
+    throw new Error("POURKIT_SERENA_MCP_URL must be a non-empty string");
+  }
+
+  if (serena.sandboxMcpUrl.trim() === "") {
+    throw new Error(
+      "POURKIT_SERENA_SANDBOX_MCP_URL must be a non-empty string"
+    );
+  }
+
   return {
     targets,
     labels: data.labels,
@@ -665,7 +682,7 @@ export function parseConfig(raw: unknown): PourkitConfig {
       pollIntervalSeconds: data.checks.pollIntervalSeconds ?? 15,
       issueListLimit: data.checks.issueListLimit ?? 50,
     },
-    serena: data.serena,
+    serena,
     cleanup: {
       enabled: data.cleanup?.enabled ?? true,
       worktreeRetentionDays: data.cleanup?.worktreeRetentionDays ?? 14,

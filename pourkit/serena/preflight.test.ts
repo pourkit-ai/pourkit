@@ -48,6 +48,7 @@ function makeLogger() {
 describe("prepareSerenaForTarget", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
   });
 
   it("skips Serena when target is disabled", async () => {
@@ -56,6 +57,7 @@ describe("prepareSerenaForTarget", () => {
       targetName: "default",
       baseBranch: "dev",
       dataDir: ".pourkit/serena/",
+      mcpUrl: "http://localhost:9121/mcp",
       enabled: false,
       required: false,
       autoStart: false,
@@ -96,6 +98,7 @@ describe("prepareSerenaForTarget", () => {
       targetName: "default",
       baseBranch: "dev",
       dataDir: ".pourkit/serena/",
+      mcpUrl: "http://localhost:9121/mcp",
       enabled: true,
       required: false,
       autoStart: true,
@@ -114,6 +117,7 @@ describe("prepareSerenaForTarget", () => {
       expect.objectContaining({
         baselineWorktreePath: paths.baselineWorktreePath,
         dataDir: paths.dataDir,
+        mcpUrl: "http://localhost:9121/mcp",
       })
     );
     expect(refreshSerenaBaselineMock).toHaveBeenCalledWith({
@@ -144,24 +148,69 @@ describe("prepareSerenaForTarget", () => {
       containerName: "pourkit-serena-sidecar",
     });
 
-    const result = await prepareSerenaForTarget({
+    vi.mocked(fetch).mockRejectedValue(new Error("connection refused"));
+
+    const unavailable = await prepareSerenaForTarget({
       repoRoot: "/repo",
       targetName: "default",
       baseBranch: "dev",
       dataDir: ".pourkit/serena/",
+      mcpUrl: "http://localhost:9121/mcp",
       enabled: true,
       required: false,
       autoStart: false,
       logger: makeLogger(),
     });
 
-    expect(result).toMatchObject({
+    expect(unavailable).toMatchObject({
       enabled: true,
       available: false,
     });
-    expect((result as { error: string }).error).toContain(
+    expect((unavailable as { error: string }).error).toContain(
       "Serena sidecar is not running"
     );
     expect(refreshSerenaBaselineMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts reachable external MCP when local sidecar is absent", async () => {
+    const paths = {
+      rootDir: "/repo/.pourkit/serena",
+      baselineWorktreePath: "/repo/.pourkit/serena/baseline/active-repo",
+      dataDir: "/repo/.pourkit/serena/data",
+    };
+
+    ensureBaselineWorktreeMock.mockResolvedValue(paths);
+    prepareSerenaSidecarConfigMock.mockResolvedValue(undefined);
+    getSerenaSidecarStatusMock.mockResolvedValue({
+      running: false,
+      mcpUrl: "http://external.example/mcp",
+      dashboardUrl: "http://localhost:24282",
+      containerName: "pourkit-serena-sidecar",
+    });
+    refreshSerenaBaselineMock.mockResolvedValue({
+      exists: true,
+      baselineWorktreePath: paths.baselineWorktreePath,
+      currentCommit: "abc123",
+      expectedRef: "origin/dev",
+      fresh: true,
+    });
+
+    const result = await prepareSerenaForTarget({
+      repoRoot: "/repo",
+      targetName: "default",
+      baseBranch: "dev",
+      dataDir: ".pourkit/serena/",
+      mcpUrl: "http://external.example/mcp",
+      enabled: true,
+      required: false,
+      autoStart: false,
+      logger: makeLogger(),
+    });
+
+    expect(result).toEqual({
+      enabled: true,
+      available: true,
+      mcpUrl: "http://external.example/mcp",
+    });
   });
 });

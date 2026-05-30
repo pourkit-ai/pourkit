@@ -19,6 +19,7 @@ const {
   prepareSerenaSidecarConfigMock,
   getSerenaSidecarStatusMock,
   getSerenaBaselineStatusMock,
+  indexSerenaProjectMock,
   startSerenaSidecarMock,
   stopSerenaSidecarMock,
 } = vi.hoisted(() => ({
@@ -27,6 +28,7 @@ const {
   prepareSerenaSidecarConfigMock: vi.fn(),
   getSerenaSidecarStatusMock: vi.fn(),
   getSerenaBaselineStatusMock: vi.fn(),
+  indexSerenaProjectMock: vi.fn(),
   startSerenaSidecarMock: vi.fn(),
   stopSerenaSidecarMock: vi.fn(),
 }));
@@ -56,6 +58,7 @@ vi.mock("../serena/baseline", async (importOriginal) => {
 vi.mock("../serena/container", () => ({
   prepareSerenaSidecarConfig: prepareSerenaSidecarConfigMock,
   getSerenaSidecarStatus: getSerenaSidecarStatusMock,
+  indexSerenaProject: indexSerenaProjectMock,
   startSerenaSidecar: startSerenaSidecarMock,
   stopSerenaSidecar: stopSerenaSidecarMock,
 }));
@@ -184,6 +187,12 @@ describe("serena commands", () => {
       dataDir: "/repo/.pourkit/serena/data",
     };
     ensureBaselineWorktreeMock.mockResolvedValue(resolvedPaths);
+    startSerenaSidecarMock.mockResolvedValue({
+      running: true,
+      mcpUrl: "http://localhost:9121/mcp",
+      dashboardUrl: "http://localhost:24282",
+      containerName: "pourkit-serena-sidecar",
+    });
 
     await runSerenaInitCommand({ target: "default", cwd: "/repo" });
 
@@ -202,6 +211,20 @@ describe("serena commands", () => {
       baselineWorktreePath: resolvedPaths.baselineWorktreePath,
       dataDir: resolvedPaths.dataDir,
     });
+    expect(startSerenaSidecarMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baselineWorktreePath: resolvedPaths.baselineWorktreePath,
+        dataDir: resolvedPaths.dataDir,
+        mcpUrl: "http://localhost:9121/mcp",
+      })
+    );
+    expect(indexSerenaProjectMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baselineWorktreePath: resolvedPaths.baselineWorktreePath,
+        dataDir: resolvedPaths.dataDir,
+        mcpUrl: "http://localhost:9121/mcp",
+      })
+    );
   });
 
   it("resolves Serena data directory path from config for init", async () => {

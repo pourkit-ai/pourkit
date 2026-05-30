@@ -9,6 +9,7 @@ import {
 } from "../serena/baseline";
 import {
   getSerenaSidecarStatus,
+  indexSerenaProject,
   prepareSerenaSidecarConfig,
   startSerenaSidecar,
   stopSerenaSidecar,
@@ -56,13 +57,14 @@ async function resolveSerenaLifecycleContext(
   };
 }
 
-function buildSerenaSidecarOptions(paths: SerenaPaths) {
+function buildSerenaSidecarOptions(paths: SerenaPaths, mcpUrl?: string) {
   return {
     baselineWorktreePath: paths.baselineWorktreePath,
     dataDir: paths.dataDir,
     mcpPort: SERENA_MCP_PORT,
     dashboardPort: SERENA_DASHBOARD_PORT,
     image: SERENA_IMAGE,
+    mcpUrl,
   };
 }
 
@@ -103,6 +105,10 @@ export async function runSerenaInitCommand(
     baselineWorktreePath: paths.baselineWorktreePath,
     dataDir: paths.dataDir,
   });
+
+  const sidecarOptions = buildSerenaSidecarOptions(paths, config.serena.mcpUrl);
+  await startSerenaSidecar(sidecarOptions);
+  await indexSerenaProject(sidecarOptions);
 }
 
 export async function runSerenaRefreshCommand(
@@ -133,7 +139,7 @@ export async function runSerenaStartCommand(
   });
 
   const status = await startSerenaSidecar(
-    buildSerenaSidecarOptions(ensuredPaths)
+    buildSerenaSidecarOptions(ensuredPaths, config.serena.mcpUrl)
   );
   logSerenaSidecarStatus("Serena sidecar started", status);
 }
@@ -141,8 +147,10 @@ export async function runSerenaStartCommand(
 export async function runSerenaStopCommand(
   options: SerenaLifecycleCommandOptions
 ): Promise<void> {
-  const { paths } = await resolveSerenaLifecycleContext(options);
-  const status = await stopSerenaSidecar(buildSerenaSidecarOptions(paths));
+  const { config, paths } = await resolveSerenaLifecycleContext(options);
+  const status = await stopSerenaSidecar(
+    buildSerenaSidecarOptions(paths, config.serena.mcpUrl)
+  );
   logSerenaSidecarStatus("Serena sidecar stopped", status);
 }
 
@@ -151,7 +159,9 @@ export async function runSerenaStatusCommand(
 ): Promise<void> {
   const { repoRootPath, config, paths } =
     await resolveSerenaLifecycleContext(options);
-  const status = await getSerenaSidecarStatus(buildSerenaSidecarOptions(paths));
+  const status = await getSerenaSidecarStatus(
+    buildSerenaSidecarOptions(paths, config.serena.mcpUrl)
+  );
 
   if (options.target) {
     const target = resolveTarget(config, options.target);

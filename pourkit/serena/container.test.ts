@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getSerenaSidecarStatus,
+  indexSerenaProject,
   startSerenaSidecar,
   stopSerenaSidecar,
 } from "./container";
@@ -187,5 +188,52 @@ describe("getSerenaSidecarStatus", () => {
       dashboardUrl: "http://localhost:24282",
       containerName: "pourkit-serena-sidecar",
     });
+  });
+
+  it("reports configured MCP URL", async () => {
+    const options = {
+      baselineWorktreePath: "/repo/.pourkit/serena/baseline/active-repo",
+      dataDir: "/repo/.pourkit/serena/data",
+      mcpPort: 9121,
+      dashboardPort: 24282,
+      image: "ghcr.io/oraios/serena:latest",
+      mcpUrl: "http://serena.example/mcp",
+    };
+
+    execCaptureMock.mockResolvedValue({
+      code: 0,
+      stdout: JSON.stringify([{ State: { Running: true } }]),
+      stderr: "",
+    });
+
+    await expect(getSerenaSidecarStatus(options)).resolves.toMatchObject({
+      mcpUrl: "http://serena.example/mcp",
+    });
+  });
+});
+
+describe("indexSerenaProject", () => {
+  it("runs Serena project create index in sidecar", async () => {
+    const options = {
+      baselineWorktreePath: "/repo/.pourkit/serena/baseline/active-repo",
+      dataDir: "/repo/.pourkit/serena/data",
+      mcpPort: 9121,
+      dashboardPort: 24282,
+      image: "ghcr.io/oraios/serena:latest",
+    };
+
+    execCaptureMock.mockResolvedValue({ code: 0, stdout: "", stderr: "" });
+
+    await indexSerenaProject(options);
+
+    expect(execCaptureMock).toHaveBeenCalledWith("docker", [
+      "exec",
+      "pourkit-serena-sidecar",
+      "serena",
+      "project",
+      "create",
+      "--index",
+      "/workspaces/pourkit",
+    ]);
   });
 });

@@ -61,10 +61,11 @@ See `.pourkit/docs/agents/git-workflow.md` for the full branch, PR, hotfix, and 
 
 ### Serena Commands
 
-- `pourkit serena init` initializes the Serena sidecar baseline and data directory.
+- `pourkit serena init --target <name>` initializes the Serena sidecar baseline, data directory, and first index for a target base branch.
 - `pourkit serena start` / `pourkit serena stop` manage the Serena sidecar container lifecycle.
-- `pourkit serena status` reports sidecar health and baseline staleness.
-- `pourkit serena refresh` updates the Serena Baseline Worktree to the target `baseBranch` HEAD.
+- `pourkit serena status --target <name>` reports sidecar health and baseline staleness.
+- `pourkit serena refresh --target <name>` updates the Serena Baseline Worktree to the target `baseBranch` HEAD.
+- `POURKIT_SERENA_MCP_URL` and `POURKIT_SERENA_SANDBOX_MCP_URL` override configured Serena MCP URLs at runtime.
 
 ### PR Workflow
 - `pourkit pr create --config <path> --target <name> --title <title>` is the canonical PR creation workflow for humans and agents.
