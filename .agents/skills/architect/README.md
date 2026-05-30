@@ -21,6 +21,8 @@ Architect: init <initiative title>
 Architect: compress
 Architect: status
 Architect: next
+Architect: publish PRD
+Architect: breakdown
 Architect: reconcile
 Architect: update
 Architect: list
@@ -33,6 +35,9 @@ grill-with-docs session
   → Architect: compress
   → Architect: status
   → Architect: next
+  → Architect: publish PRD
+  → Architect: breakdown
+  → queue-run --prd PRD-00N
   → implement one PRD
   → Architect: reconcile
   → Architect: next

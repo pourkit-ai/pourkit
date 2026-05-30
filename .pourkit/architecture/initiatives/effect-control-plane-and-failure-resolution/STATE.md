@@ -2,19 +2,29 @@
 
 ## Current State
 
-`executing`
+`issues-published`
 
 ## Active PRD
 
-`PRD-037` — Base Refresh failure resolution control plane
+`PRD-037` — Base Refresh failure resolution control plane (#74)
+
+## Active PRD Status
+
+published to GitHub as https://github.com/pourkit-ai/pourkit/issues/74; 5 child Issues published
 
 ## Current Phase
 
-executing Slice 1 — Base Refresh + Failure Resolution Agent
+Slice 1 — Base Refresh + Failure Resolution Agent PRD published; child Issues published
 
 ## Last Architect Command
 
-`Architect: next`
+`Architect: breakdown`
+
+## Next Allowed Commands
+
+- `queue-run --prd PRD-037` (implement child Issues in dependency order)
+- `Architect: update`
+- `Architect: status`
 
 ## Last Updated
 
@@ -22,4 +32,4 @@ executing Slice 1 — Base Refresh + Failure Resolution Agent
 
 ## Notes
 
-Selected Slice 1 and created local PRD mirror `PRD-037` for Base Refresh + Failure Resolution Agent. GitHub publication is pending because no issue-tracker write tool is available in this runtime. Next: publish the PRD issue with `needs-triage`, then run `Architect: breakdown`.
+Published `PRD-037` for Base Refresh + Failure Resolution Agent to GitHub issue #74. Child Issues published: I-01 (#75), I-02 (#76), I-03 (#77), I-04 (#78), I-05 (#79). Next: `queue-run --prd PRD-037` to implement in dependency order starting with I-01.

@@ -22,6 +22,8 @@
           "*": "deny",
           "pourkit-architecture-compressor": "allow",
           "pourkit-architecture-reconciler": "allow",
+          "pourkit-prd-publisher": "allow",
+          "pourkit-issue-publisher": "allow",
           "advisory-analyzer": "allow"
         }
       }
@@ -112,6 +114,50 @@
         "edit": "allow",
         "bash": {
           "*": "deny"
+        },
+        "task": "deny"
+      }
+    },
+
+    "pourkit-prd-publisher": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Publishes one Architect-selected PRD to GitHub and mirrors the exact body under .pourkit/architecture.",
+      "reasoningEffort": "medium",
+      "temperature": 0.1,
+      "model": "opencode-go/deepseek-v4-flash",
+      "prompt": "{file:.pourkit/prompts/pourkit-prd-publisher.prompt.md}",
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "skill": "allow",
+        "edit": "allow",
+        "bash": {
+          "*": "allow"
+        },
+        "task": "deny"
+      }
+    },
+
+    "pourkit-issue-publisher": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Publishes child Issues for one Architect-selected PRD and mirrors exact bodies under .pourkit/architecture.",
+      "reasoningEffort": "medium",
+      "temperature": 0.1,
+      "model": "opencode-go/deepseek-v4-flash",
+      "prompt": "{file:.pourkit/prompts/pourkit-issue-publisher.prompt.md}",
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "skill": "allow",
+        "edit": "allow",
+        "bash": {
+          "*": "allow"
         },
         "task": "deny"
       }

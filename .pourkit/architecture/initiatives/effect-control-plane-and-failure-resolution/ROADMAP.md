@@ -8,7 +8,7 @@ Only stable, executable slices become PRDs.
 
 ### Slice 1 — Base Refresh + Failure Resolution Agent
 
-Status: active
+Status: issues-published
 Priority: 1
 
 Scope:
