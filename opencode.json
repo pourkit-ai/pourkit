@@ -13,6 +13,7 @@
         "glob": "allow",
         "grep": "allow",
         "list": "allow",
+        "skill": "allow",
         "edit": "allow",
         "bash": {
           "*": "deny"

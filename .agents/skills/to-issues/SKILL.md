@@ -9,6 +9,8 @@ Break a plan into independently-grabbable issues using vertical slices (tracer b
 
 The issue tracker and triage label vocabulary should have been provided to you — run /setup-matt-pocock-skills if not.
 
+If invoked by `architect` with a parent PRD and local mirror folder, publish child Issues normally, then write each exact child Issue body to the requested mirror folder. Use the child Issue title format from `.pourkit/docs/agents/naming.md`: `PRD-00N / I-0N: <short slice title>`. Do not change the issue template for architect-specific metadata; architecture state owns links, mirror paths, and status.
+
 ## Process
 
 ### 1. Gather context
@@ -411,6 +413,8 @@ Before publishing each issue, verify every item in this checklist. If any item f
 > **Order matters.** Publish blockers first so their issue numbers exist before you reference them in the Blocked by field of dependent issues. Do not publish a dependent issue before its blockers have been assigned real issue numbers.
 
 For each approved slice, publish a new issue using the body generated in step 5.
+
+If the source is a PRD, title each child Issue using `.pourkit/docs/agents/naming.md`: `PRD-00N / I-0N: <short slice title>`. Assign child Issue numbers in dependency order and keep the same numbering in any local mirror filenames.
 
 Apply the `needs-triage` label and the appropriate type label:
 

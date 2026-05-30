@@ -69,7 +69,10 @@ Architect writes to:
           COMPRESSED.md
           EXTRACTIONS.md
       prds/
-        001-<slice-slug>.md
+        PRD-00N-<slice-slug>/
+          PRD.md
+          issues/
+            I-0N-<issue-slug>.md
       completions/
         001-<slice-slug>.md
       next.md
@@ -138,6 +141,9 @@ Treat these as commands even when phrased naturally:
 - `Architect: status`
 - `Architect: next`
 - `Architect: next PRD`
+- `Architect: create PRD`
+- `Architect: breakdown`
+- `Architect: create issues`
 - `Architect: reconcile`
 - `Architect: complete PRD`
 - `Architect: update`
@@ -159,7 +165,7 @@ Actions:
 1. Create slug from provided title.
 2. Create `.pourkit/architecture/INDEX.md` if missing.
 3. Create `.pourkit/architecture/initiatives/<initiative-slug>/`.
-4. Create baseline files from templates:
+4. Create baseline architecture ledger files from templates:
    - `INITIATIVE.md`
    - `STATE.md`
    - `DECISIONS.md`
@@ -225,22 +231,27 @@ Actions:
 1. Read `STATE.md`, `ROADMAP.md`, `OPEN_QUESTIONS.md`, `DECISIONS.md`, and `completions/`.
 2. Select exactly one next PRD candidate.
 3. If the next slice is not stable, do not invent certainty. Update `next.md` with blockers and set state to `blocked`.
-4. If stable, create one PRD in `prds/NNN-<slice-slug>.md`.
-5. Update `next.md` with the selected PRD.
-6. Update `STATE.md` to `executing`.
-7. Append changelog entry.
+4. If stable, prepare a source packet for `to-prd` containing initiative path, selected slice, linked decisions, relevant open questions, roadmap status, and requested mirror path.
+5. Use `to-prd` to create or publish exactly one PRD. Do not use an architecture PRD template.
+6. Store the parent PRD mirror at `prds/PRD-00N-<slice-slug>/PRD.md`.
+7. Update `next.md` with the selected PRD ID, issue URL if published, mirror path, and next command.
+8. Update `STATE.md` to `executing`.
+9. Append changelog entry.
 
-The PRD must include:
-- purpose
-- source initiative
-- linked decisions
-- scope
-- non-goals
-- requirements
-- acceptance criteria
-- risks
-- validation plan
-- completion update instructions
+The PRD body is owned by `to-prd`. Architect owns source selection, mirror placement, state transitions, and drift checks.
+
+## `Architect: breakdown`
+
+Purpose: turn the active parent PRD into child Issues.
+
+Actions:
+1. Identify active PRD from `next.md`, `STATE.md`, or `prds/PRD-00N-<slice-slug>/PRD.md`.
+2. Use `to-issues` against the parent PRD to create independently grabbable child Issues.
+3. Mirror each child Issue under `prds/PRD-00N-<slice-slug>/issues/I-0N-<issue-slug>.md`.
+4. Update `next.md` with parent PRD, child Issue list, and PRD-scoped queue command when known.
+5. Append changelog entry.
+
+Do not invent child Issues inside Architect. The child Issue body is owned by `to-issues`.
 
 ## `Architect: reconcile`
 
@@ -314,7 +325,17 @@ The roadmap should distinguish:
 - blocked
 - deferred
 
-Do not turn every candidate into a PRD. Only stable, executable slices become PRDs.
+Do not turn every candidate into a PRD. Only stable, executable slices become PRDs, and PRD bodies must go through `to-prd`.
+
+## PRD and Issue mirror handling
+
+The architecture PRD directory is a mirror of issue-tracker artifacts plus architecture linkage:
+
+- `prds/PRD-00N-<slice-slug>/PRD.md` mirrors the parent PRD issue body.
+- `prds/PRD-00N-<slice-slug>/issues/I-0N-<issue-slug>.md` mirrors child Issue bodies from `to-issues`.
+- `next.md` points to the active parent PRD, issue URL if published, mirror folder, and next command.
+
+Mirror files must not define their own templates. Regenerate or update them from `to-prd` and `to-issues` output so architecture stays aligned with existing planning skills.
 
 ## Completion handling
 
