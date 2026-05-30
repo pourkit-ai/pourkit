@@ -124,6 +124,22 @@ _Avoid_: Production deploy, final build
 A release-note and version-intent file required for user-facing changes so Changesets can calculate the next stable version and changelog.
 _Avoid_: Changelog entry, release note file
 
+**Batch Baseline**:
+The git revision Serena indexes at the start of a Queue run batch. All parallel Issue Worktrees in the same batch share this baseline context. Agents see only baseline intelligence — symbol info from the base commit, not unmerged sibling Worktree changes. Agents talk to the same Serena sidecar HTTP endpoint regardless of which Worktree they run in.
+_Avoid_: Per-Worktree index, live Worktree context
+
+**Serena Baseline Worktree**:
+Runner-owned git checkout that Serena indexes, checked out at the active Target's `baseBranch`. Managed by Pourkit CLI through normal git operations. Path on host: `.pourkit/serena/baseline/active-repo/`. Mounted into the Serena sidecar container at `/workspaces/pourkit`.
+_Avoid_: Live Worktree checkout, Serena sandbox mount
+
+**Serena Sidecar**:
+Long-lived Docker container running Serena MCP server, separate from all Sandcastle containers. Persists across Issue runs. Mounts the Serena Baseline Worktree and Serena data directory. Both Pourkit Sandboxes and host OpenCode connect to it as a remote MCP server over HTTP.
+_Avoid_: Ephemeral Serena instance, in-Sandbox Serena
+
+**Snapshot Oracle**:
+The property that Serena provides intelligence about the **baseline commit**, not about in-flight Worktree edits. Agents must not use Serena for symbols just introduced in their own Issue Worktree, files changed by a sibling Worktree, post-edit validation of uncommitted diff, or refactoring decisions depending on current agent edits. OpenCode file tools remain source of truth for current Worktree state.
+_Avoid_: Live Worktree oracle, real-time symbol provider
+
 ## Relationships
 
 - A **Target** selects one **Strategy** for processing an **Issue**
