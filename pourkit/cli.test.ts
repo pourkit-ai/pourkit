@@ -18,6 +18,9 @@ const {
   runInitCommandMock,
   runSerenaInitCommandMock,
   runSerenaRefreshCommandMock,
+  runSerenaStartCommandMock,
+  runSerenaStopCommandMock,
+  runSerenaStatusCommandMock,
   promptForInitChoicesMock,
   cleanupRepositoryMock,
 } = vi.hoisted(() => ({
@@ -28,6 +31,9 @@ const {
   runInitCommandMock: vi.fn(),
   runSerenaInitCommandMock: vi.fn(),
   runSerenaRefreshCommandMock: vi.fn(),
+  runSerenaStartCommandMock: vi.fn(),
+  runSerenaStopCommandMock: vi.fn(),
+  runSerenaStatusCommandMock: vi.fn(),
   promptForInitChoicesMock: vi.fn(),
   cleanupRepositoryMock: vi.fn().mockResolvedValue(undefined),
 }));
@@ -103,6 +109,9 @@ vi.mock("./commands/init", () => ({
 vi.mock("./commands/serena", () => ({
   runSerenaInitCommand: runSerenaInitCommandMock,
   runSerenaRefreshCommand: runSerenaRefreshCommandMock,
+  runSerenaStartCommand: runSerenaStartCommandMock,
+  runSerenaStopCommand: runSerenaStopCommandMock,
+  runSerenaStatusCommand: runSerenaStatusCommandMock,
 }));
 
 vi.mock("./shared/cleanup", () => ({
@@ -652,6 +661,43 @@ describe("pourkit cli", () => {
     await main(["serena", "refresh", "--target", "default", "--cwd", "/repo"]);
 
     expect(runSerenaRefreshCommandMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: "default",
+        cwd: "/repo",
+      })
+    );
+  });
+
+  it("routes serena start through commander", async () => {
+    const { main } = await import("./cli");
+
+    await main(["serena", "start", "--cwd", "/repo"]);
+
+    expect(runSerenaStartCommandMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cwd: "/repo",
+      })
+    );
+  });
+
+  it("routes serena stop through commander", async () => {
+    const { main } = await import("./cli");
+
+    await main(["serena", "stop", "--cwd", "/repo"]);
+
+    expect(runSerenaStopCommandMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cwd: "/repo",
+      })
+    );
+  });
+
+  it("routes serena status through commander with optional target", async () => {
+    const { main } = await import("./cli");
+
+    await main(["serena", "status", "--target", "default", "--cwd", "/repo"]);
+
+    expect(runSerenaStatusCommandMock).toHaveBeenCalledWith(
       expect.objectContaining({
         target: "default",
         cwd: "/repo",

@@ -1,6 +1,12 @@
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { runSerenaInitCommand, runSerenaRefreshCommand } from "./serena";
+import {
+  runSerenaInitCommand,
+  runSerenaRefreshCommand,
+  runSerenaStartCommand,
+  runSerenaStatusCommand,
+  runSerenaStopCommand,
+} from "./serena";
 
 const { loadRepoConfigMock, repoRootMock } = vi.hoisted(() => ({
   loadRepoConfigMock: vi.fn(),
@@ -11,10 +17,18 @@ const {
   ensureBaselineWorktreeMock,
   refreshSerenaBaselineMock,
   prepareSerenaSidecarConfigMock,
+  getSerenaSidecarStatusMock,
+  getSerenaBaselineStatusMock,
+  startSerenaSidecarMock,
+  stopSerenaSidecarMock,
 } = vi.hoisted(() => ({
   ensureBaselineWorktreeMock: vi.fn(),
   refreshSerenaBaselineMock: vi.fn(),
   prepareSerenaSidecarConfigMock: vi.fn(),
+  getSerenaSidecarStatusMock: vi.fn(),
+  getSerenaBaselineStatusMock: vi.fn(),
+  startSerenaSidecarMock: vi.fn(),
+  stopSerenaSidecarMock: vi.fn(),
 }));
 
 vi.mock("../shared/config", async (importOriginal) => {
@@ -29,13 +43,21 @@ vi.mock("../shared/common", () => ({
   repoRoot: repoRootMock,
 }));
 
-vi.mock("../serena/baseline", () => ({
-  ensureBaselineWorktree: ensureBaselineWorktreeMock,
-  refreshSerenaBaseline: refreshSerenaBaselineMock,
-}));
+vi.mock("../serena/baseline", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../serena/baseline")>();
+  return {
+    ...actual,
+    ensureBaselineWorktree: ensureBaselineWorktreeMock,
+    getSerenaBaselineStatus: getSerenaBaselineStatusMock,
+    refreshSerenaBaseline: refreshSerenaBaselineMock,
+  };
+});
 
 vi.mock("../serena/container", () => ({
   prepareSerenaSidecarConfig: prepareSerenaSidecarConfigMock,
+  getSerenaSidecarStatus: getSerenaSidecarStatusMock,
+  startSerenaSidecar: startSerenaSidecarMock,
+  stopSerenaSidecar: stopSerenaSidecarMock,
 }));
 
 const config = {
@@ -206,5 +228,131 @@ describe("serena commands", () => {
       dataDir: ".pourkit/serena/",
       baseBranch: "main",
     });
+  });
+
+  it("starts Serena sidecar without refreshing baseline", async () => {
+    const resolvedPaths = {
+      rootDir: "/repo/.pourkit/serena",
+      baselineWorktreePath: "/repo/.pourkit/serena/baseline/active-repo",
+      dataDir: "/repo/.pourkit/serena/data",
+    };
+    ensureBaselineWorktreeMock.mockResolvedValue(resolvedPaths);
+    startSerenaSidecarMock.mockResolvedValue({
+      running: true,
+      mcpUrl: "http://localhost:9121/mcp",
+      dashboardUrl: "http://localhost:24282",
+      containerName: "pourkit-serena-sidecar",
+    });
+
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    try {
+      await runSerenaStartCommand({ cwd: "/repo" });
+
+      expect(ensureBaselineWorktreeMock).toHaveBeenCalledWith({
+        repoRoot: "/repo",
+        dataDir: ".pourkit/serena/",
+      });
+      expect(refreshSerenaBaselineMock).not.toHaveBeenCalled();
+      expect(startSerenaSidecarMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          baselineWorktreePath: resolvedPaths.baselineWorktreePath,
+          dataDir: resolvedPaths.dataDir,
+        })
+      );
+      expect(prepareSerenaSidecarConfigMock).toHaveBeenCalledWith({
+        baselineWorktreePath: resolvedPaths.baselineWorktreePath,
+        dataDir: resolvedPaths.dataDir,
+      });
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Serena sidecar started")
+      );
+    } finally {
+      logSpy.mockRestore();
+    }
+  });
+
+  it("stops Serena sidecar without deleting data", async () => {
+    stopSerenaSidecarMock.mockResolvedValue({
+      running: false,
+      mcpUrl: "http://localhost:9121/mcp",
+      dashboardUrl: "http://localhost:24282",
+      containerName: "pourkit-serena-sidecar",
+    });
+
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    try {
+      await runSerenaStopCommand({ cwd: "/repo" });
+
+      expect(ensureBaselineWorktreeMock).not.toHaveBeenCalled();
+      expect(stopSerenaSidecarMock).toHaveBeenCalled();
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Serena sidecar stopped")
+      );
+    } finally {
+      logSpy.mockRestore();
+    }
+  });
+
+  it("reports Serena status freshness when target is provided", async () => {
+    getSerenaSidecarStatusMock.mockResolvedValue({
+      running: true,
+      mcpUrl: "http://localhost:9121/mcp",
+      dashboardUrl: "http://localhost:24282",
+      containerName: "pourkit-serena-sidecar",
+    });
+    getSerenaBaselineStatusMock.mockResolvedValue({
+      exists: true,
+      baselineWorktreePath: "/repo/.pourkit/serena/baseline/active-repo",
+      currentCommit: "abc123",
+      expectedRef: "origin/dev",
+      fresh: false,
+    });
+
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    try {
+      await runSerenaStatusCommand({ target: "default", cwd: "/repo" });
+
+      expect(getSerenaSidecarStatusMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          baselineWorktreePath: "/repo/.pourkit/serena/baseline/active-repo",
+          dataDir: "/repo/.pourkit/serena/data",
+        })
+      );
+      expect(getSerenaBaselineStatusMock).toHaveBeenCalledWith({
+        repoRoot: "/repo",
+        dataDir: ".pourkit/serena/",
+        baseBranch: "dev",
+      });
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Baseline freshness: stale")
+      );
+    } finally {
+      logSpy.mockRestore();
+    }
+  });
+
+  it("reports Serena status without target freshness", async () => {
+    getSerenaSidecarStatusMock.mockResolvedValue({
+      running: false,
+      mcpUrl: "http://localhost:9121/mcp",
+      dashboardUrl: "http://localhost:24282",
+      containerName: "pourkit-serena-sidecar",
+    });
+
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    try {
+      await runSerenaStatusCommand({ cwd: "/repo" });
+
+      expect(getSerenaBaselineStatusMock).not.toHaveBeenCalled();
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Serena sidecar status")
+      );
+    } finally {
+      logSpy.mockRestore();
+    }
   });
 });
