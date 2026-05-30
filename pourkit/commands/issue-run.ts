@@ -25,6 +25,7 @@ import {
   STAGE_SECTIONS,
 } from "../shared/run-context";
 import { appendProtectedWorkGuidance } from "../shared/prompt-guidance";
+import type { SerenaExecutionContext } from "../execution/opencode-config";
 import {
   readWorktreeRunState,
   writeWorktreeRunState,
@@ -171,6 +172,7 @@ export interface IssueRunStartResult {
   branchName: string;
   worktreeState: WorktreeRunState | null;
   executionResult: ExecutionResult;
+  serena?: SerenaExecutionContext;
 }
 
 export interface RunIssueResult {
@@ -225,6 +227,7 @@ export async function startIssueRun(
   const serenaRuntimeConfig = resolveSerenaRuntimeConfig(config, target);
   const shouldPrepareSerena =
     serenaRuntimeConfig.enabled || serenaRuntimeConfig.required;
+  let serenaExecutionContext: SerenaExecutionContext | undefined;
 
   if (shouldPrepareSerena) {
     const serenaPreflight = await prepareSerenaForTarget({
@@ -237,6 +240,13 @@ export async function startIssueRun(
       autoStart: serenaRuntimeConfig.autoStart,
       logger,
     });
+
+    if (serenaPreflight.enabled && serenaPreflight.available) {
+      serenaExecutionContext = {
+        available: true,
+        sandboxMcpUrl: config.serena.sandboxMcpUrl,
+      };
+    }
 
     if (serenaPreflight.enabled && !serenaPreflight.available) {
       const message = `Serena preflight unavailable for target ${target.name}: ${serenaPreflight.error}`;
@@ -432,6 +442,7 @@ export async function startIssueRun(
       branchName,
       ...(resolution.mode === "new" ? { baseRef: resolution.baseRef } : {}),
       sandbox: config.sandbox,
+      ...(serenaExecutionContext ? { serena: serenaExecutionContext } : {}),
       autoApprove: true,
       timeoutMs: EXECUTION_TIMEOUT_MS,
       ...(resolution.worktreePath
@@ -483,6 +494,7 @@ export async function startIssueRun(
     branchName,
     worktreeState: finalWorktreeState,
     executionResult,
+    ...(serenaExecutionContext ? { serena: serenaExecutionContext } : {}),
   };
 }
 

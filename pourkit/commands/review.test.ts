@@ -1114,6 +1114,78 @@ describe("runReviewWithRefactorLoop", () => {
     expect(executionProvider.execute).toHaveBeenCalledTimes(3);
   });
 
+  it("passes Serena sandbox config to refactor only", async () => {
+    let reviewCallCount = 0;
+    let seenReviewerSerena: unknown;
+    let seenRefactorSerena: unknown;
+    const executionProvider: ExecutionProvider = {
+      execute: vi.fn(async (options) => {
+        if (options.stage === "reviewer") {
+          reviewCallCount++;
+          seenReviewerSerena = options.serena;
+          if (reviewCallCount === 1) {
+            writeReviewerArtifact(
+              options.worktreePath ?? WORKTREE_PATH,
+              "<verdict>NEEDS_REFACTOR</verdict>",
+              options.iteration ?? 1
+            );
+          } else {
+            writeReviewerArtifact(
+              options.worktreePath ?? WORKTREE_PATH,
+              [
+                "## Findings",
+                "",
+                "| ID | Supersedes | Severity | File/Line | Issue | Recommendation |",
+                "|----|------------|----------|-----------|-------|----------------|",
+                "| none | n/a | n/a | n/a | No findings. | n/a |",
+                "",
+                "## Prior Refactor Response Assessment",
+                "",
+                "| ID | Classification | Rationale |",
+                "|----|----------------|-----------|",
+                "| R1.F1 | accepted | Fixed in refactor |",
+                "",
+                "<verdict>PASS</verdict>",
+              ].join("\n"),
+              options.iteration ?? 1
+            );
+          }
+        } else if (options.stage === "refactor") {
+          seenRefactorSerena = options.serena;
+          writeRefactorArtifact(
+            options.worktreePath ?? WORKTREE_PATH,
+            options.iteration ?? 1
+          );
+        }
+
+        return {
+          success: true,
+          branch: "pourkit/42/test-issue",
+          worktreePath: options.worktreePath ?? WORKTREE_PATH,
+          commits: [],
+          logPath: null,
+        };
+      }),
+    };
+
+    const result = await runReviewWithRefactorLoop(
+      makeBaseLoopOptions({
+        executionProvider,
+        serena: {
+          available: true,
+          sandboxMcpUrl: "http://sandbox.example/mcp",
+        },
+      })
+    );
+
+    expect(result.verdict).toBe("PASS");
+    expect(seenReviewerSerena).toBeUndefined();
+    expect(seenRefactorSerena).toEqual({
+      available: true,
+      sandboxMcpUrl: "http://sandbox.example/mcp",
+    });
+  });
+
   it("includeReviewHistory false suppresses review history but not refactor artifacts", async () => {
     const config = makeConfigWithRefactor();
     config.targets[0].strategy.review.reviewer.includeReviewHistory = false;

@@ -13,6 +13,7 @@ import { writeExecutionArtifacts } from "./execution-provider";
 import { ensureSandboxImageBuilt } from "./sandbox-image-build";
 import { createSandboxFromExistingWorktree } from "./sandcastle-existing-worktree";
 import { buildSandboxOptions } from "./sandbox-options";
+import { buildSerenaOpenCodeConfig } from "./opencode-config";
 
 export class SandcastleExecutionProvider implements ExecutionProvider {
   async createSession(): Promise<ExecutionSession> {
@@ -71,6 +72,11 @@ class SandcastleExecutionSession implements ExecutionSession {
       const env: Record<string, string> = {};
       if (autoApprove) {
         env.OPENCODE_AUTO_APPROVE = "true";
+      }
+
+      const serenaConfig = buildSerenaOpenCodeConfig(stage, options.serena);
+      if (serenaConfig) {
+        env.OPENCODE_CONFIG_CONTENT = JSON.stringify(serenaConfig);
       }
 
       const logPath = `${repoRoot}/.pourkit/logs/${sanitizeBranch(branchName)}-${Date.now()}.log`;

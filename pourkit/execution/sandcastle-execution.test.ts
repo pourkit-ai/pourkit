@@ -430,6 +430,90 @@ describe("SandcastleExecutionProvider", () => {
     }
   });
 
+  it("injects Serena MCP config only for eligible stages", async () => {
+    const worktreePath = mkdtempSync(join(tmpdir(), "pourkit-serena-config-"));
+    const sandboxRun = vi.fn().mockResolvedValue({
+      branch: "pourkit/42/test-issue",
+      commits: [],
+    });
+    sandcastleMocks.createSandboxFromExistingWorktreeMock.mockResolvedValue({
+      branch: "pourkit/42/test-issue",
+      worktreePath,
+      run: sandboxRun,
+      close: vi.fn(),
+    });
+
+    const provider = new SandcastleExecutionProvider();
+    try {
+      await provider.execute({
+        stage: "builder",
+        agent: "build",
+        model: "test-build",
+        prompt: "build this",
+        target: makeTarget(),
+        repoRoot: "/repo",
+        branchName: "pourkit/42/test-issue",
+        worktreePath,
+        sandbox: sandboxConfig,
+        serena: {
+          available: true,
+          sandboxMcpUrl: "http://sandbox.example/mcp",
+        },
+        logger: makeLogger(),
+      });
+
+      expect(sandcastleMocks.opencodeMock).toHaveBeenCalledWith(
+        "test-build",
+        expect.objectContaining({
+          env: expect.objectContaining({
+            OPENCODE_CONFIG_CONTENT: expect.any(String),
+          }),
+        })
+      );
+
+      const builderCall = sandcastleMocks.opencodeMock.mock
+        .calls[0] as unknown as [string, { env: Record<string, string> }];
+      const builderEnv = builderCall[1].env;
+      expect(JSON.parse(builderEnv.OPENCODE_CONFIG_CONTENT)).toEqual(
+        expect.objectContaining({
+          mcp: {
+            serena: {
+              type: "remote",
+              url: "http://sandbox.example/mcp",
+              enabled: true,
+            },
+          },
+        })
+      );
+
+      sandcastleMocks.opencodeMock.mockClear();
+
+      await provider.execute({
+        stage: "reviewer",
+        agent: "review",
+        model: "test-review",
+        prompt: "review this",
+        target: makeTarget(),
+        repoRoot: "/repo",
+        branchName: "pourkit/42/test-issue",
+        worktreePath,
+        sandbox: sandboxConfig,
+        serena: {
+          available: true,
+          sandboxMcpUrl: "http://sandbox.example/mcp",
+        },
+        logger: makeLogger(),
+      });
+
+      const reviewerCall = sandcastleMocks.opencodeMock.mock
+        .calls[0] as unknown as [string, { env: Record<string, string> }];
+      const reviewerEnv = reviewerCall[1].env;
+      expect(reviewerEnv.OPENCODE_CONFIG_CONTENT).toBeUndefined();
+    } finally {
+      rmSync(worktreePath, { recursive: true, force: true });
+    }
+  });
+
   it("logs tool call stream events with formatted arguments", async () => {
     const worktreePath = mkdtempSync(join(tmpdir(), "pourkit-stream-"));
     const sandboxRun = vi.fn().mockResolvedValue({
