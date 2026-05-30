@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Triage issues through a state machine driven by triage roles. Use when user wants to create an issue, triage issues, review incoming bugs or feature requests, prepare issues for an AFK agent, or manage issue workflow.
+description: Triage issues through a state machine driven by triage roles. Use when user wants to create an issue, triage issues, review incoming bugs or feature requests, prepare issues for an AFK agent, manage issue workflow, or batch-triage scoped issue sets from another agent.
 ---
 
 # Triage
@@ -63,12 +63,18 @@ State transitions: an unlabeled issue normally goes to `needs-triage` first; fro
 
 ## Invocation
 
+### Interactive mode
+
 The maintainer invokes `/triage` and describes what they want in natural language. Interpret the request and act. Examples:
 
 - "Show me anything that needs my attention"
 - "Let's look at #42"
 - "Move #42 to ready-for-agent"
 - "What's ready for agents to pick up?"
+
+### Batch mode
+
+Other agents invoke triage with an explicit issue scope, typically via prompt instruction rather than a slash command. See [Batch triage mode](#batch-triage-mode) below.
 
 ## Show what needs attention
 
@@ -101,6 +107,33 @@ Show counts and a one-line summary per issue. Let the maintainer pick.
 ## Quick state override
 
 If the maintainer says "move #42 to ready-for-agent", trust them and apply the role directly. Confirm what you're about to do (role changes, comment, close), then act. Skip grilling. If moving to `ready-for-agent` without a grilling session, ask whether they want to write an agent brief.
+
+## Batch triage mode
+
+When triage is invoked by another agent (e.g. `pourkit-issue-publisher` after publishing child Issues), the caller provides an explicit issue-number scope. Act without human confirmation unless blocked by ambiguity.
+
+**Scope rules:**
+- "all" in batch mode means all Issues in the caller-provided scope, not every open repo Issue
+- supported scopes: explicit issue number list, optionally the parent PRD Issue
+- never expand scope beyond what the caller provided
+- process Issues in dependency order (blockers first)
+
+**For freshly published PRD child Issues:**
+- issue body is complete and labels are pre-set by the publisher
+- verify labels are correct (state, category, type, dependency)
+- correct any mismatches without maintainer confirmation
+- flag only if an issue has conflicting state labels, missing category, or a `ready-for-agent` without exactly one `type:*` label
+- post triage notes only when something needed correction
+
+**For the parent PRD:**
+- check only if instructions say to
+- if already correctly triaged (state + category + type all set, no conflict), leave it alone
+- if missing labels or still `needs-triage`, triage it using standard single-issue triage flow but skip grilling/repro steps — the spec is already in the PRD body
+- flag structural label conflicts and let caller decide
+
+**Guardrails:**
+- never infer permission to triage every open repo Issue from a batch call
+- if parent PRD has conflicting labels or an unclear state, report as a blocker — do not guess or broad-clean
 
 ## Needs-info template
 
