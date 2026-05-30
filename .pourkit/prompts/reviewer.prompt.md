@@ -23,6 +23,8 @@ Before writing the review, inspect:
 - Relevant tests or validation commands, if present.
 - Any files directly touched by the builder.
 
+Use the `effect-ts` skill only when reviewing Effect-TS-specific decisions. Start with `references/docs-index.md` inside that skill to route the work, then load only the relevant reference(s). Do not load it for ordinary TypeScript, generic refactors, or non-Effect code.
+
 ## Review Criteria
 
 {{REVIEW_CRITERIA}}

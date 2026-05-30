@@ -6,7 +6,7 @@
 
 ## Active PRD
 
-`prds/PRD-001-base-refresh-failure-resolution-agent/PRD.md`
+`PRD-037` — Base Refresh failure resolution control plane
 
 ## Current Phase
 
@@ -22,4 +22,4 @@ executing Slice 1 — Base Refresh + Failure Resolution Agent
 
 ## Notes
 
-Created first executable PRD for Slice 1. PRD mirror corrected to current `to-prd` format with child Issue mirrors from `to-issues`. State machine remains `executing`. Next: implement PRD-scoped child Issues, then run `Architect: reconcile`.
+Selected Slice 1 and created local PRD mirror `PRD-037` for Base Refresh + Failure Resolution Agent. GitHub publication is pending because no issue-tracker write tool is available in this runtime. Next: publish the PRD issue with `needs-triage`, then run `Architect: breakdown`.

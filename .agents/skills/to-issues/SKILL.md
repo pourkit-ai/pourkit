@@ -31,6 +31,8 @@ Issue titles and descriptions should use the project's domain glossary vocabular
 
 While exploring, identify existing tests near the touched code paths. Prefer issues that extend existing test coverage instead of creating isolated tests disconnected from current behavior.
 
+If the plan requires Effect-TS decisions, use the `effect-ts` skill before finalizing issue contracts. Start with `references/docs-index.md` inside that skill to route the specific Effect topic, then load only the relevant reference(s). Use `effect-ts` only for Effect-related decisions such as error-channel modeling, `Effect.Service`/Layer wiring, runtime boundaries, schema decoding, concurrency, scheduling, streams, platform modules, Effect AI, or Promise/async migration; do not load it for ordinary TypeScript, generic refactors, or non-Effect planning.
+
 ### 3. Draft vertical slices
 
 Break the plan into tracer bullet issues. Each issue is a thin vertical slice for one independently reviewable behavior contract. It may cut through multiple adjacent layers needed for that behavior, but it must not bundle unrelated contracts merely because they share a dependency, directory, package, integration boundary, or migration theme.

@@ -2,6 +2,30 @@
 
 ## Active
 
+### OQ-0001 — RecoveryArtifact JSON schema exactness
+
+What fields, types, and required/optional structure should the RecoveryArtifact JSON block use?
+
+Context:
+DEC-0011 requires a markdown artifact with a parseable JSON block. The exact schema needs to be defined in the first PRD.
+
+Suggested resolution:
+Define minimum required fields in the first PRD: `recoveryDecision`, `summary`, `changedFiles`, and verification/context fields needed for host validation.
+
+---
+
+### OQ-0002 — RecoveryDecision enum values for first slice
+
+Which RecoveryDecision enum values should be implemented in the first slice?
+
+Context:
+DEC-0013 defines `RETRY_STAGE`, `RESUME_FROM_STAGE`, `MARK_STAGE_COMPLETE`, `HANDOFF_TO_HUMAN`, and `FAIL_RUN`. First slice may not need all variants.
+
+Suggested resolution:
+Define executable first-slice subset in the PRD and leave unsupported variants parsed or deferred explicitly.
+
+---
+
 ### OQ-0003 — Runtime boundary migration timeline
 
 When should the Effect runtime migrate from the temporary local boundary inside the async Issue Runner to the CLI application edge (`runPromiseExit`)?
@@ -23,6 +47,30 @@ DEC-0021 limits first slice to Base Refresh. Full taxonomy defined but not imple
 
 Suggested resolution:
 Expand taxonomy incrementally with each new stage that adopts Effect control plane. Second slice candidate.
+
+---
+
+### OQ-0005 — Failure resolution budget defaults
+
+What default should `strategy.failureResolution.maxAttemptsPerFailure` use?
+
+Context:
+DEC-0009 locks a fallback max attempts value with optional per-failure overrides, but the exact default is not yet set.
+
+Suggested resolution:
+Choose a conservative default in the first PRD and allow `failureLimits` overrides for specific StageFailure types.
+
+---
+
+### OQ-0006 — FailureResolutionPacket schema
+
+What fields should the structured FailureResolutionPacket include for the first slice?
+
+Context:
+DEC-0010 requires structured packet input for the Failure Resolution Agent. Exact fields need to support Base Refresh and RebaseConflict recovery.
+
+Suggested resolution:
+Define packet fields in the first PRD, including failure type, stage, attempt number, Worktree path, failure summary/details, policy limits, allowed decisions, and artifact path.
 
 ---
 
@@ -60,36 +108,4 @@ Document as future concern. First slice assumes single sequential queue where ba
 
 ## Resolved
 
-### OQ-0001 — RecoveryArtifact JSON schema exactness
-
-Resolved by: `prds/PRD-001-base-refresh-failure-resolution-agent/PRD.md`
-
-Resolution:
-First slice validates markdown containing one required fenced `json` block with `recoveryDecision`, `summary`, `changedFiles`, `verification`, and optional `notes`.
-
----
-
-### OQ-0002 — RecoveryDecision enum values for first slice
-
-Resolved by: `prds/PRD-001-base-refresh-failure-resolution-agent/PRD.md`
-
-Resolution:
-First slice supports `RETRY_STAGE`, `HANDOFF_TO_HUMAN`, and `FAIL_RUN`; parses but does not execute `RESUME_FROM_STAGE` and `MARK_STAGE_COMPLETE`.
-
----
-
-### OQ-0005 — Failure resolution budget defaults
-
-Resolved by: `prds/PRD-001-base-refresh-failure-resolution-agent/PRD.md`
-
-Resolution:
-Default `strategy.failureResolution.maxAttemptsPerFailure` is `3`, overrideable by `failureLimits`.
-
----
-
-### OQ-0006 — FailureResolutionPacket schema
-
-Resolved by: `prds/PRD-001-base-refresh-failure-resolution-agent/PRD.md`
-
-Resolution:
-First slice packet includes `failureType`, `stage`, `attemptNumber`, `worktreePath`, `failureSummary`, `failureDetails`, `policyLimits`, `allowedDecisions`, and `artifactPath`.
+None yet.

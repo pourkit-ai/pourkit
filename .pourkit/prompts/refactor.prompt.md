@@ -97,6 +97,7 @@ Record any open blockers. Use the exact table shown below:
 ## Implementation
 
 - Use the `tdd` skill for any behavior changes or bug fixes.
+- Use the `effect-ts` skill only when an accepted finding requires Effect-TS decisions. Start with `references/docs-index.md` inside that skill to route the work, then load only the relevant reference(s). Do not load it for ordinary TypeScript, generic refactors, or non-Effect code.
 - Use the `security-review` skill before final verification.
 - Make the smallest correct change that addresses accepted reviewer findings.
 - Prefer targeted edits in files already touched by the builder.
