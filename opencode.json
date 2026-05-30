@@ -6,6 +6,7 @@
       "description": "Primary orchestration agent for Pourkit architectural lifecycle management. Owns initiative continuity, exploration routing, compression, roadmap evolution, PRD orchestration, issue orchestration, reconciliation, and drift prevention.",
       "reasoningEffort": "high",
       "temperature": 0.2,
+      "model": "openai/gpt-5.5",
       "prompt": "{file:.pourkit/prompts/pourkit-architect.prompt.md}",
       "permission": {
         "read": "allow",
@@ -79,6 +80,7 @@
       "description": "Compresses large architectural exploration sessions into durable initiative state under .pourkit/architecture.",
       "reasoningEffort": "medium",
       "temperature": 0.1,
+      "model": "opencode-go/deepseek-v4-flash",
       "prompt": "{file:.pourkit/prompts/pourkit-architecture-compressor.prompt.md}",
       "permission": {
         "read": "allow",
@@ -99,6 +101,7 @@
       "description": "Reconciles completed PRDs/issues against initiative roadmap, locked decisions, and architectural state.",
       "reasoningEffort": "medium",
       "temperature": 0.1,
+      "model": "opencode-go/deepseek-v4-flash",
       "prompt": "{file:.pourkit/prompts/pourkit-architecture-reconciler.prompt.md}",
       "permission": {
         "read": "allow",
@@ -116,6 +119,7 @@
     "advisory-analyzer": {
       "mode": "subagent",
       "hidden": true,
+      "model": "opencode-go/deepseek-v4-flash",
       "description": "Provides bounded advisory analysis for Pourkit Builder, Refactor, and Architect.",
       "prompt": "{file:.pourkit/prompts/advisory-analyzer.prompt.md}",
       "permission": {
