@@ -3,8 +3,8 @@
 ## Initiative
 
 - Slug: `effect-control-plane-and-failure-resolution`
-- State: `executing`
-- Active PRD: `PRD-037`
+- State: `issues-published`
+- Active PRD: `PRD-037` (#74)
 
 ## Core Artifacts
 

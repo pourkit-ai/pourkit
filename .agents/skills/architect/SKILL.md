@@ -18,6 +18,7 @@ Architect must behave like a command router plus state machine. The user should 
 - Architect: compress
 - Architect: status
 - Architect: next
+- Architect: publish PRD
 - Architect: reconcile
 - Architect: update
 
@@ -93,7 +94,10 @@ Allowed initiative states:
 - `exploring` — idea/design is still being explored
 - `stabilizing` — one or more grill sessions have been compressed; decisions/questions/slices are being clarified
 - `roadmap-ready` — at least one executable PRD candidate is stable
-- `executing` — a PRD is active or in implementation
+- `prd-ready` — exactly one local PRD candidate/source packet is selected and ready to publish
+- `prd-published` — parent PRD exists on the issue tracker and is mirrored locally
+- `issues-published` — child Issues exist on the issue tracker and the PRD queue can run
+- `executing` — implementation is actively running or has been explicitly started
 - `reconciling` — a PRD has completed and must be compared against the roadmap
 - `blocked` — progress requires a decision, missing evidence, or human input
 - `complete` — initiative is complete
@@ -107,12 +111,21 @@ exploring
   └── compress → stabilizing
 
 stabilizing
-  ├── next, if one slice is stable → roadmap-ready, then executing after PRD creation
+  ├── next, if one slice is stable → prd-ready
   ├── next, if not stable → blocked
   └── update → stabilizing
 
 roadmap-ready
-  └── next → executing
+  └── next → prd-ready
+
+prd-ready
+  └── publish PRD → prd-published
+
+prd-published
+  └── breakdown → issues-published
+
+issues-published
+  └── implementation starts → executing
 
 executing
   └── reconcile → stabilizing | roadmap-ready | complete | blocked
@@ -142,6 +155,8 @@ Treat these as commands even when phrased naturally:
 - `Architect: next`
 - `Architect: next PRD`
 - `Architect: create PRD`
+- `Architect: publish PRD`
+- `Architect: publish selected PRD`
 - `Architect: breakdown`
 - `Architect: create issues`
 - `Architect: reconcile`
@@ -225,33 +240,49 @@ Actions:
 
 ## `Architect: next`
 
-Purpose: select the next executable PRD from roadmap state.
+Purpose: select the next executable PRD candidate from roadmap state and prepare it locally. This command must not publish to GitHub and must not move the initiative to `executing`.
 
 Actions:
 1. Read `STATE.md`, `ROADMAP.md`, `OPEN_QUESTIONS.md`, `DECISIONS.md`, and `completions/`.
 2. Select exactly one next PRD candidate.
 3. If the next slice is not stable, do not invent certainty. Update `next.md` with blockers and set state to `blocked`.
-4. If stable, prepare a source packet for `to-prd` containing initiative path, selected slice, linked decisions, relevant open questions, roadmap status, and requested mirror path.
-5. Use `to-prd` to create or publish exactly one PRD. Do not use an architecture PRD template.
-6. Store the parent PRD mirror at `prds/PRD-00N-<slice-slug>/PRD.md`.
-7. Update `next.md` with the selected PRD ID, issue URL if published, mirror path, and next command.
-8. Update `STATE.md` to `executing`.
-9. Append changelog entry.
+4. If stable, prepare a PRD source packet containing initiative path, selected slice, linked decisions, relevant open questions, roadmap status, and requested mirror path.
+5. Create or update the local PRD candidate at `prds/PRD-00N-<slice-slug>/PRD.md`. It may be a draft/source packet, but it must be sufficient input for `Architect: publish PRD`.
+6. Update `next.md` with the selected PRD ID, GitHub status `not published`, mirror path, and next command `Architect: publish PRD`.
+7. Update `STATE.md` to `prd-ready`.
+8. Append changelog entry.
 
-The PRD body is owned by `to-prd`. Architect owns source selection, mirror placement, state transitions, and drift checks.
+Do not call `to-prd` in publish mode from `Architect: next`. Publication is a separate state transition.
+
+## `Architect: publish PRD`
+
+Purpose: publish the selected local PRD candidate to the issue tracker and mirror the final published body.
+
+Actions:
+1. Require `STATE.md` to be `prd-ready`. If not, report the allowed next command instead of guessing.
+2. Read selected PRD metadata from `next.md` and `prds/PRD-00N-<slice-slug>/PRD.md`.
+3. Delegate PRD body production and issue-tracker publication to `pourkit-prd-publisher` when available. The publisher must follow `to-prd`'s PRD body contract and apply `needs-triage`.
+4. Mirror the exact published parent PRD body at `prds/PRD-00N-<slice-slug>/PRD.md`.
+5. Update `next.md` with the selected PRD ID, issue URL/number, mirror path, and next command `Architect: breakdown`.
+6. Update `STATE.md` to `prd-published`.
+7. Append changelog entry.
+
+The PRD body is owned by the PRD publisher using the `to-prd` contract. Architect owns source selection, mirror placement, state transitions, and drift checks.
 
 ## `Architect: breakdown`
 
-Purpose: turn the active parent PRD into child Issues.
+Purpose: turn the active published parent PRD into child Issues.
 
 Actions:
-1. Identify active PRD from `next.md`, `STATE.md`, or `prds/PRD-00N-<slice-slug>/PRD.md`.
-2. Use `to-issues` against the parent PRD to create independently grabbable child Issues.
-3. Mirror each child Issue under `prds/PRD-00N-<slice-slug>/issues/I-0N-<issue-slug>.md`.
-4. Update `next.md` with parent PRD, child Issue list, and PRD-scoped queue command when known.
-5. Append changelog entry.
+1. Require `STATE.md` to be `prd-published`. If not, report the allowed next command instead of guessing.
+2. Identify active PRD from `next.md`, including parent issue URL/number and mirror path.
+3. Delegate child Issue production and issue-tracker publication to `pourkit-issue-publisher` when available. The publisher must follow `to-issues` and publish in dependency order.
+4. Mirror each child Issue under `prds/PRD-00N-<slice-slug>/issues/I-0N-<issue-slug>.md`.
+5. Update `next.md` with parent PRD, child Issue list, and PRD-scoped queue command when known.
+6. Update `STATE.md` to `issues-published`.
+7. Append changelog entry.
 
-Do not invent child Issues inside Architect. The child Issue body is owned by `to-issues`.
+Do not invent child Issues inside Architect. The child Issue body is owned by the Issue publisher using the `to-issues` contract.
 
 ## `Architect: reconcile`
 
@@ -321,11 +352,14 @@ The roadmap should distinguish:
 - completed
 - active
 - ready
+- prd-ready
+- prd-published
+- issues-published
 - candidate
 - blocked
 - deferred
 
-Do not turn every candidate into a PRD. Only stable, executable slices become PRDs, and PRD bodies must go through `to-prd`.
+Do not turn every candidate into a PRD. Only stable, executable slices become PRDs, and PRD bodies must follow the `to-prd` contract.
 
 ## PRD and Issue mirror handling
 
@@ -333,9 +367,9 @@ The architecture PRD directory is a mirror of issue-tracker artifacts plus archi
 
 - `prds/PRD-00N-<slice-slug>/PRD.md` mirrors the parent PRD issue body.
 - `prds/PRD-00N-<slice-slug>/issues/I-0N-<issue-slug>.md` mirrors child Issue bodies from `to-issues`.
-- `next.md` points to the active parent PRD, issue URL if published, mirror folder, and next command.
+- `next.md` points to the selected or active parent PRD, issue URL if published, mirror folder, current state, and next command.
 
-Mirror files must not define their own templates. Regenerate or update them from `to-prd` and `to-issues` output so architecture stays aligned with existing planning skills.
+Mirror files must not define their own templates. Regenerate or update them from PRD/Issue publisher output that follows `to-prd` and `to-issues`, so architecture stays aligned with existing planning skills.
 
 ## Completion handling
 

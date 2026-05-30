@@ -7,6 +7,8 @@ Architect: init <initiative title>
 Architect: compress
 Architect: status
 Architect: next
+Architect: publish PRD
+Architect: breakdown
 Architect: reconcile
 Architect: update
 Architect: list
@@ -18,6 +20,8 @@ Generic examples:
 Architect: init <initiative title>
 Architect: compress
 Architect: next
+Architect: publish PRD
+Architect: breakdown
 Architect: reconcile
 ```
 

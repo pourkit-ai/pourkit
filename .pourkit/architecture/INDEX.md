@@ -8,4 +8,4 @@
 
 | Initiative | State | Current Phase | Active PRD | Last Updated |
 |---|---:|---|---|---|
-| `effect-control-plane-and-failure-resolution` | executing | Slice 1 - Base Refresh + Failure Resolution Agent | PRD-037 | 2026-05-30 |
+| `effect-control-plane-and-failure-resolution` | issues-published | Slice 1 - Base Refresh + Failure Resolution Agent | PRD-037 (#74) | 2026-05-30 |

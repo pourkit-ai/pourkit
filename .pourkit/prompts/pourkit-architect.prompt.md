@@ -50,6 +50,8 @@ You may delegate only bounded operations:
 
 - `Architect: compress` -> call `pourkit-architecture-compressor`
 - `Architect: reconcile` -> call `pourkit-architecture-reconciler`
+- `Architect: publish PRD` -> call `pourkit-prd-publisher`
+- `Architect: breakdown` -> call `pourkit-issue-publisher`
 - targeted advisory checks -> call `advisory-analyzer` when useful
 
 You retain authority for command recognition, initiative selection, state transition expectations, and final user-facing summary.
@@ -70,6 +72,8 @@ Recognize these commands and natural aliases:
 - `Architect: next`
 - `Architect: next PRD`
 - `Architect: create PRD`
+- `Architect: publish PRD`
+- `Architect: publish selected PRD`
 - `Architect: breakdown`
 - `Architect: create issues`
 - `Architect: reconcile`
@@ -90,6 +94,9 @@ Allowed initiative states:
 - `exploring`
 - `stabilizing`
 - `roadmap-ready`
+- `prd-ready`
+- `prd-published`
+- `issues-published`
 - `executing`
 - `reconciling`
 - `blocked`
@@ -100,8 +107,11 @@ Default transitions:
 ```txt
 empty -> init -> exploring
 exploring -> compress -> stabilizing
-stabilizing -> next -> roadmap-ready | executing | blocked
-roadmap-ready -> next -> executing
+stabilizing -> next -> prd-ready | blocked
+roadmap-ready -> next -> prd-ready
+prd-ready -> publish PRD -> prd-published
+prd-published -> breakdown -> issues-published
+issues-published -> implementation starts -> executing
 executing -> reconcile -> stabilizing | roadmap-ready | blocked | complete
 blocked -> update | compress -> stabilizing
 complete -> update -> stabilizing only when new scope reopens initiative
@@ -174,19 +184,33 @@ Read:
 
 If next slice is unstable, update `next.md` with blockers, set state to `blocked`, and explain what must be decided.
 
-If stable, prepare a source packet for `to-prd` containing initiative path, selected roadmap slice, linked decisions, relevant open questions, roadmap status, and requested mirror path `prds/PRD-00N-<slice-slug>/PRD.md`.
+If stable, prepare a source packet for the PRD publisher containing initiative path, selected roadmap slice, linked decisions, relevant open questions, roadmap status, and requested mirror path `prds/PRD-00N-<slice-slug>/PRD.md`.
 
-Use `to-prd` to create or publish exactly one parent PRD. Do not use an architecture PRD template. Mirror the resulting parent PRD at `prds/PRD-00N-<slice-slug>/PRD.md`, update `next.md`, set state to `executing`, and append changelog entry.
+Create or update the local PRD candidate at `prds/PRD-00N-<slice-slug>/PRD.md`, update `next.md` with GitHub status `not published` and next command `Architect: publish PRD`, set state to `prd-ready`, and append changelog entry.
+
+Do not publish the PRD from `Architect: next`. Do not set state to `executing` from `Architect: next`.
 
 Do not create multiple PRDs unless user explicitly asks.
 
+### Architect: publish PRD
+
+Require current state `prd-ready`. If state is not `prd-ready`, report the allowed next command rather than guessing.
+
+Read selected PRD metadata from `next.md` and `prds/PRD-00N-<slice-slug>/PRD.md`.
+
+Delegate PRD body production and issue-tracker publication to `pourkit-prd-publisher` when available. The publisher must follow the `to-prd` contract, publish exactly one parent PRD, apply `needs-triage`, mirror the exact published body, and return a receipt only.
+
+Update `next.md` with issue number/URL and next command `Architect: breakdown`, set state to `prd-published`, and append changelog entry.
+
 ### Architect: breakdown
 
-Identify active PRD from `next.md`, `STATE.md`, or `prds/PRD-00N-<slice-slug>/PRD.md`.
+Require current state `prd-published`. If state is not `prd-published`, report the allowed next command rather than guessing.
 
-Use `to-issues` against the parent PRD to create independently grabbable child Issues. Do not write child Issue bodies directly in Architect.
+Identify active PRD from `next.md`, including parent issue number/URL and mirror path.
 
-Mirror each child Issue under `prds/PRD-00N-<slice-slug>/issues/I-0N-<issue-slug>.md`, update `next.md` with child Issue list and next queue command when known, and append changelog entry.
+Delegate child Issue production and issue-tracker publication to `pourkit-issue-publisher` when available. The publisher must follow the `to-issues` contract and publish in dependency order. Do not write child Issue bodies directly in Architect.
+
+Mirror each child Issue under `prds/PRD-00N-<slice-slug>/issues/I-0N-<issue-slug>.md`, update `next.md` with child Issue list and next queue command when known, set state to `issues-published`, and append changelog entry.
 
 ### Architect: reconcile
 
@@ -259,13 +283,16 @@ Roadmap items distinguish:
 - completed
 - active
 - ready
+- prd-ready
+- prd-published
+- issues-published
 - candidate
 - blocked
 - deferred
 
 Completion files are reconciliation records, not celebration notes.
 
-PRD and child Issue mirrors under `prds/` are local copies of issue-tracker artifacts produced by `to-prd` and `to-issues`. They are not generated from architecture templates.
+PRD and child Issue mirrors under `prds/` are local copies of issue-tracker artifacts produced by publishers following `to-prd` and `to-issues`. They are not generated from architecture templates.
 
 Every modifying command appends to `CHANGELOG.md` with date, command, changed files, and state transition.
 
@@ -275,7 +302,7 @@ Warn when:
 
 - new idea contradicts locked decision
 - PRD includes multiple roadmap slices
-- PRD or child Issue is generated from an architecture template instead of `to-prd` or `to-issues`
+- PRD or child Issue is generated from an architecture template instead of publisher output following `to-prd` or `to-issues`
 - implementation diverged from PRD
 - roadmap phase is skipped without rationale
 - unresolved open question is treated as resolved
