@@ -13,6 +13,9 @@ import { runInitCommand } from "./commands/init";
 import {
   runSerenaInitCommand,
   runSerenaRefreshCommand,
+  runSerenaStartCommand,
+  runSerenaStatusCommand,
+  runSerenaStopCommand,
 } from "./commands/serena";
 import { GitHubIssueProvider } from "./providers/github-provider";
 import { GitHubPRProvider } from "./providers/github-pr-provider";
@@ -404,6 +407,35 @@ export function createCliProgram(version: string): Command {
     .option("--cwd <path>", "target repository directory")
     .action(async (options: { target: string; cwd?: string }) => {
       await runSerenaRefreshCommand({
+        target: options.target,
+        cwd: options.cwd,
+      });
+    });
+
+  serena
+    .command("start")
+    .option("--cwd <path>", "target repository directory")
+    .action(async (options: { cwd?: string }) => {
+      await runSerenaStartCommand({
+        cwd: options.cwd,
+      });
+    });
+
+  serena
+    .command("stop")
+    .option("--cwd <path>", "target repository directory")
+    .action(async (options: { cwd?: string }) => {
+      await runSerenaStopCommand({
+        cwd: options.cwd,
+      });
+    });
+
+  serena
+    .command("status")
+    .option("--target <name>", "target name")
+    .option("--cwd <path>", "target repository directory")
+    .action(async (options: { target?: string; cwd?: string }) => {
+      await runSerenaStatusCommand({
         target: options.target,
         cwd: options.cwd,
       });
