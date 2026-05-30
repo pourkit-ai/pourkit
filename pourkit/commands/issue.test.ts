@@ -10132,3 +10132,16 @@ describe("runIssueCommand", () => {
     });
   });
 });
+
+describe("prompt content", () => {
+  it("builder prompt mentions Serena Snapshot Oracle limitations", () => {
+    const promptPath = join(
+      process.cwd(),
+      ".pourkit",
+      "prompts",
+      "builder.prompt.md"
+    );
+    const content = readFileSync(promptPath, "utf-8");
+    expect(content).toContain("Snapshot Oracle");
+  });
+});

@@ -2368,3 +2368,16 @@ describe("validateRefactorArtifact", () => {
     expect(() => validateRefactorArtifact(path, [])).not.toThrow();
   });
 });
+
+describe("prompt content", () => {
+  it("refactor prompt states Serena cannot override official Reviewer authority", () => {
+    const promptPath = join(
+      process.cwd(),
+      ".pourkit",
+      "prompts",
+      "refactor.prompt.md"
+    );
+    const content = readFileSync(promptPath, "utf-8");
+    expect(content).toContain("cannot override official Reviewer");
+  });
+});
