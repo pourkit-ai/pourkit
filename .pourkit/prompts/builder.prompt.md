@@ -41,6 +41,10 @@ Do not fix unrelated problems discovered during exploration.
 - Do **not** modify files outside the issue scope unless required for correctness.
 - Do **not** mark the issue complete unless the implementation is actually finished.
 
+## Serena
+
+If the Serena Snapshot Oracle is available, treat it as a baseline-only reference for original code. Do not rely on Serena to validate current Worktree edits. OpenCode file tools are the source of truth for active changes.
+
 ## Implementation
 
 - Start with a preflight assumption check before editing any files.

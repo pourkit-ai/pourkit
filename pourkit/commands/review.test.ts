@@ -94,6 +94,14 @@ const makeConfig = (): PourkitConfig => ({
     pollIntervalSeconds: 15,
     issueListLimit: 50,
   },
+  serena: {
+    enabled: false,
+    required: false,
+    mcpUrl: "http://localhost:9121/mcp",
+    sandboxMcpUrl: "http://localhost:9121/mcp",
+    dataDir: ".pourkit/serena/",
+    autoStart: false,
+  },
   cleanup: {
     enabled: true,
     worktreeRetentionDays: 14,
@@ -730,6 +738,14 @@ const makeConfigWithRefactor = (): PourkitConfig => ({
     pollIntervalSeconds: 15,
     issueListLimit: 50,
   },
+  serena: {
+    enabled: false,
+    required: false,
+    mcpUrl: "http://localhost:9121/mcp",
+    sandboxMcpUrl: "http://localhost:9121/mcp",
+    dataDir: ".pourkit/serena/",
+    autoStart: false,
+  },
   cleanup: {
     enabled: true,
     worktreeRetentionDays: 14,
@@ -1096,6 +1112,78 @@ describe("runReviewWithRefactorLoop", () => {
       "Do **not** revert, delete, or substantially strip already-landed protected sibling/base work unless the issue explicitly requires those files."
     );
     expect(executionProvider.execute).toHaveBeenCalledTimes(3);
+  });
+
+  it("passes Serena sandbox config to refactor only", async () => {
+    let reviewCallCount = 0;
+    let seenReviewerSerena: unknown;
+    let seenRefactorSerena: unknown;
+    const executionProvider: ExecutionProvider = {
+      execute: vi.fn(async (options) => {
+        if (options.stage === "reviewer") {
+          reviewCallCount++;
+          seenReviewerSerena = options.serena;
+          if (reviewCallCount === 1) {
+            writeReviewerArtifact(
+              options.worktreePath ?? WORKTREE_PATH,
+              "<verdict>NEEDS_REFACTOR</verdict>",
+              options.iteration ?? 1
+            );
+          } else {
+            writeReviewerArtifact(
+              options.worktreePath ?? WORKTREE_PATH,
+              [
+                "## Findings",
+                "",
+                "| ID | Supersedes | Severity | File/Line | Issue | Recommendation |",
+                "|----|------------|----------|-----------|-------|----------------|",
+                "| none | n/a | n/a | n/a | No findings. | n/a |",
+                "",
+                "## Prior Refactor Response Assessment",
+                "",
+                "| ID | Classification | Rationale |",
+                "|----|----------------|-----------|",
+                "| R1.F1 | accepted | Fixed in refactor |",
+                "",
+                "<verdict>PASS</verdict>",
+              ].join("\n"),
+              options.iteration ?? 1
+            );
+          }
+        } else if (options.stage === "refactor") {
+          seenRefactorSerena = options.serena;
+          writeRefactorArtifact(
+            options.worktreePath ?? WORKTREE_PATH,
+            options.iteration ?? 1
+          );
+        }
+
+        return {
+          success: true,
+          branch: "pourkit/42/test-issue",
+          worktreePath: options.worktreePath ?? WORKTREE_PATH,
+          commits: [],
+          logPath: null,
+        };
+      }),
+    };
+
+    const result = await runReviewWithRefactorLoop(
+      makeBaseLoopOptions({
+        executionProvider,
+        serena: {
+          available: true,
+          sandboxMcpUrl: "http://sandbox.example/mcp",
+        },
+      })
+    );
+
+    expect(result.verdict).toBe("PASS");
+    expect(seenReviewerSerena).toBeUndefined();
+    expect(seenRefactorSerena).toEqual({
+      available: true,
+      sandboxMcpUrl: "http://sandbox.example/mcp",
+    });
   });
 
   it("includeReviewHistory false suppresses review history but not refactor artifacts", async () => {
@@ -2278,5 +2366,18 @@ describe("validateRefactorArtifact", () => {
     ].join("\n");
     const path = writeArtifact(content);
     expect(() => validateRefactorArtifact(path, [])).not.toThrow();
+  });
+});
+
+describe("prompt content", () => {
+  it("refactor prompt states Serena cannot override official Reviewer authority", () => {
+    const promptPath = join(
+      process.cwd(),
+      ".pourkit",
+      "prompts",
+      "refactor.prompt.md"
+    );
+    const content = readFileSync(promptPath, "utf-8");
+    expect(content).toContain("cannot override official Reviewer");
   });
 });

@@ -89,6 +89,7 @@ export async function runIssueCommand(
         logger,
         startingLifetimeIteration: lifetimeIterationsFromState,
         humanHandoffResolved,
+        serena: startResult.serena,
       });
 
       if (reviewResult.exhaustedMaxIterations) {

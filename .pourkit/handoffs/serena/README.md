@@ -21,12 +21,12 @@ Issue runs.
 |------|---------|-------------|
 | `README.md` | This file. Entry point, last discussion, update protocol. | **First.** |
 | `glossary.md` | Domain terms for Serena integration. | After README, before any other doc. |
-| `integration-plan-and-tradeoffs.md` | Full architecture plan: Batch Baseline model, diagrams, lifecycle flows, config surface, rejected alternatives, unresolved questions, implementation priority. | Primary design doc. Read after glossary. |
+| `integration-plan-and-tradeoffs.md` | Full architecture plan: Batch Baseline model, diagrams, lifecycle flows, config surface, validation report, rejected alternatives, unresolved questions, implementation priority. | Primary design doc. Read after glossary. |
 | `serena-documentation-reference.md` | Extracted facts from Serena's published docs (Docker, MCP, contexts, modes, config, tools). Reference only, not design decisions. | As needed for factual lookups. |
 
 ---
 
-## Last Discussion (29 May 2026)
+## Last Discussion (30 May 2026)
 
 Session covered:
 
@@ -34,6 +34,12 @@ Session covered:
 - **Adopted** Batch Baseline model: Serena sidecar indexes a runner-owned
   Baseline Worktree checked out at target `baseBranch`. Parallel Issue
   Worktrees share same baseline read-only. No per-Worktree remount.
+- **Added** validation report in
+  `.pourkit/handoffs/serena/integration-plan-and-tradeoffs.md` for Docker HTTP
+  MCP startup, mounted repo indexing, incremental update, Sandcastle
+  networking, and multi-client assumptions.
+- **Observed** live Docker validation is blocked on this host because the
+  `docker` CLI is unavailable.
 - **Rule**: Single index, created once, never re-indexed per run.
   Baseline Refresh uses `git fetch + checkout` and relies on Serena
   incremental file-watch / LSP for updates.
@@ -51,8 +57,8 @@ Session covered:
   Worktree — unresolved question #9 in integration plan.
 
 Key reference: `.pourkit/handoffs/serena/integration-plan-and-tradeoffs.md`
-sections Architecture Decision, Batch Baseline Lifecycle, and Resolved
-Questions.
+sections Architecture Decision, Batch Baseline Lifecycle, Validation Report,
+and Resolved Questions.
 
 ---
 

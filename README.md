@@ -51,7 +51,23 @@ See `.pourkit/docs/agents/git-workflow.md` for the full branch, PR, hotfix, and 
 
 ## Pourkit CLI
 
+### Issue Workflow
+
 - `pourkit issue <number> --target <name> --config <path>` is the canonical entry point for the single-issue workflow.
+
+### Queue Workflow
+
+- `pourkit queue-run` processes runnable Issues from the target Queue sequentially.
+
+### Serena Commands
+
+- `pourkit serena init --target <name>` initializes the Serena sidecar baseline, data directory, and first index for a target base branch.
+- `pourkit serena start` / `pourkit serena stop` manage the Serena sidecar container lifecycle.
+- `pourkit serena status --target <name>` reports sidecar health and baseline staleness.
+- `pourkit serena refresh --target <name>` updates the Serena Baseline Worktree to the target `baseBranch` HEAD.
+- `POURKIT_SERENA_MCP_URL` and `POURKIT_SERENA_SANDBOX_MCP_URL` override configured Serena MCP URLs at runtime.
+
+### PR Workflow
 - `pourkit pr create --config <path> --target <name> --title <title>` is the canonical PR creation workflow for humans and agents.
 - `pourkit pr merge <number>` is the canonical PR merge workflow. It waits for checks, merges through Pourkit's Octokit-backed provider, and waits for the target branch to become green.
 - `npm run pourkit:e2e` exercises the live end-to-end coverage for that workflow.

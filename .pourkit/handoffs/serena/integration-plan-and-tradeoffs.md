@@ -593,6 +593,30 @@ The following were resolved during the Batch Baseline design session:
 
 ---
 
+## Validation Report
+
+Validation commands attempted on this host:
+
+- `docker version`
+- `docker ps`
+
+Observed result:
+
+- Docker is unavailable in this environment (`docker: command not found`), so
+  live Serena container checks could not be executed here.
+- Because the runtime path is blocked at the Docker prerequisite, every Serena
+  assumption below is marked blocked pending a Docker-capable host.
+
+| Assumption | Command(s) | Observed behavior | Status | Implementation adjustment |
+|------------|------------|-------------------|--------|---------------------------|
+| Docker HTTP MCP startup | `serena start-mcp-server --transport streamable-http --port 9121 --host 0.0.0.0` | Not runnable here; Docker CLI missing. | blocked | Keep Serena opportunistic and gate enablement behind Docker availability checks. |
+| Mounted repo indexing | `serena project create --index /workspaces/pourkit` | Not runnable here; no container to mount repo into. | blocked | Preserve one Baseline Worktree per active target and validate indexing on a Docker-capable host. |
+| Checkout-triggered incremental updates | `git fetch origin <baseBranch>` + `git checkout --detach origin/<baseBranch>` | Not runnable here; live Serena file-watch could not be observed. | blocked | Keep Baseline Refresh + incremental update path; retain the optional restart fallback noted in the plan. |
+| Sandcastle networking | `docker run ... --network host ...` | Not runnable here; Docker networking could not be exercised. | blocked | Keep `--network host` as preferred path and preserve bridge-network fallback guidance. |
+| Multiple clients sharing one Serena sidecar | Parallel MCP clients against the same sidecar | Not runnable here; no live sidecar available. | blocked | Preserve single-sidecar, shared-baseline model and warn if a different baseline is required. |
+
+---
+
 ## Unresolved Questions / Need to Investigate
 
 ### Serena Behavior
