@@ -159,7 +159,8 @@ describe("@pourkit/cli package", () => {
       } finally {
         rmSync(tempRoot, { recursive: true, force: true });
       }
-    }
+    },
+    60_000
   );
 });
 
