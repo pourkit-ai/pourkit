@@ -2,28 +2,28 @@
 
 ## Recommendation
 
-Implement `prds/PRD-001-base-refresh-failure-resolution-agent/PRD.md` through its mirrored child Issues.
+Active PRD: `PRD-037` — Base Refresh failure resolution control plane.
 
 ## Reason
 
-Slice 1 is now active. PRD resolves first-slice schema/default choices, preserves later-slice deferrals, and has child Issue mirrors ready for PRD-scoped execution.
+Slice 1 was stable and executable. Architect selected it as the single next PRD and mirrored the PRD body locally.
 
 ## If Ready
 
-Active PRD: Slice 1 — Base Refresh + Failure Resolution Agent
+Selected slice: Slice 1 — Base Refresh + Failure Resolution Agent
 
-Path: `prds/PRD-001-base-refresh-failure-resolution-agent/PRD.md`
+Mirror path: `prds/PRD-037-base-refresh-failure-resolution-control-plane/PRD.md`
 
-Child Issues:
-- `prds/PRD-001-base-refresh-failure-resolution-agent/issues/I-01-strategy-failure-resolution-config.md`
-- `prds/PRD-001-base-refresh-failure-resolution-agent/issues/I-02-failure-resolution-domain-and-attempt-log.md`
-- `prds/PRD-001-base-refresh-failure-resolution-agent/issues/I-03-base-refresh-stage-attempt-policy.md`
-- `prds/PRD-001-base-refresh-failure-resolution-agent/issues/I-04-rebase-conflict-failure-resolution-agent.md`
+Issue URL: pending publication
 
 ## If Blocked
 
-Blocking questions: none for active PRD.
+Resolved in PRD scope as first-slice implementation decisions:
+- OQ-0001 — RecoveryArtifact JSON schema exactness
+- OQ-0002 — RecoveryDecision enum values for first slice
+- OQ-0005 — Failure resolution budget defaults
+- OQ-0006 — FailureResolutionPacket schema
 
 ## Next Command
 
-Implement child Issues in dependency order, then run `Architect: reconcile`.
+Publish `PRD-037` to GitHub with `needs-triage`, then run `Architect: breakdown`.

@@ -52,6 +52,7 @@ If the Serena Snapshot Oracle is available, treat it as a baseline-only referenc
 - Compare the issue assumptions against the current branch reality.
 - If the issue is stale, blocked, under-scoped, or the assumptions do not match reality, stop and report the mismatch instead of implementing.
 - Use the `tdd` skill for implementation work.
+- Use the `effect-ts` skill only when an implementation decision requires Effect-TS knowledge. Start with `references/docs-index.md` inside that skill to route the work, then load only the relevant reference(s). Do not load it for ordinary TypeScript, generic refactors, or non-Effect code.
 - Explore the repo enough to understand the relevant path before editing.
 - Make the smallest correct change.
 - Prefer keeping the change localized unless a broader refactor is clearly required.

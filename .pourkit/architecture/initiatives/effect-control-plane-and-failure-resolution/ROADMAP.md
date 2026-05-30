@@ -10,7 +10,6 @@ Only stable, executable slices become PRDs.
 
 Status: active
 Priority: 1
-PRD: `prds/PRD-001-base-refresh-failure-resolution-agent/PRD.md`
 
 Scope:
 - Add Effect dependency; narrow Effect island for Base Refresh control.
