@@ -808,11 +808,8 @@ describe("planInit", () => {
           expect(agentsOp?.content).toContain(
             ".pourkit/docs/agents/issue-tracker.md"
           );
-          expect(agentsOp?.content).toContain(
-            "This project uses Code Context Engine for intelligent code retrieval and"
-          );
-          expect(agentsOp?.content).toContain("context_search");
-          expect(agentsOp?.content).toContain("session_recall");
+          expect(agentsOp?.content).toContain("Use `fd` for file discovery");
+          expect(agentsOp?.content).toContain("`rg` for text search");
 
           // Generated content: .gitignore
           const gitignoreOp = plan.operations.find(
