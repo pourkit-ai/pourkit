@@ -7,6 +7,7 @@ import type {
   VerificationCommand,
 } from "../shared/config";
 import type { ExecutionArtifact } from "../shared/run-context";
+import type { SerenaExecutionContext } from "./opencode-config";
 
 export interface ExecutionResult {
   success: boolean;
@@ -37,6 +38,7 @@ export interface ExecutionProviderOptions {
   branchName: string;
   baseRef?: string;
   sandbox: SandboxConfig;
+  serena?: SerenaExecutionContext;
   autoApprove?: boolean;
   timeoutMs?: number;
   artifacts?: ExecutionArtifact[];

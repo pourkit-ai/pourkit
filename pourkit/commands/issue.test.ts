@@ -544,6 +544,48 @@ describe("runIssueCommand", () => {
       );
       expect(executionProvider.calls).toHaveLength(0);
     });
+
+    it("passes Serena sandbox config to Builder when preflight succeeds", async () => {
+      const config = makeConfig({
+        serena: {
+          enabled: true,
+          required: false,
+          autoStart: true,
+          dataDir: ".pourkit/serena/",
+          sandboxMcpUrl: "http://sandbox.example/mcp",
+        },
+      });
+      prepareSerenaForTargetMock.mockResolvedValue({
+        enabled: true,
+        available: true,
+        mcpUrl: "http://localhost:9121/mcp",
+      });
+      const issueProvider = new FakeIssueProvider([
+        makeIssue({ labels: ["ready-for-agent"] }),
+      ]);
+      const prProvider = makePrProvider();
+      const logger = makeLogger();
+
+      const result = await startIssueRun({
+        issueNumber: 42,
+        config,
+        issueProvider,
+        prProvider,
+        executionProvider,
+        force: false,
+        logger,
+        repoRoot: "/tmp/pourkit-issue-test",
+      });
+
+      expect(result.serena).toEqual({
+        available: true,
+        sandboxMcpUrl: "http://sandbox.example/mcp",
+      });
+      expect(executionProvider.calls[0]?.serena).toEqual({
+        available: true,
+        sandboxMcpUrl: "http://sandbox.example/mcp",
+      });
+    });
   });
 
   it("passes run context to Builder, pushes branch, and opens a PR", async () => {
