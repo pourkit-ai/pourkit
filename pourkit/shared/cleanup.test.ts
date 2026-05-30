@@ -260,6 +260,14 @@ describe("cleanupRepository", () => {
           pollIntervalSeconds: 15,
           issueListLimit: 50,
         },
+        serena: {
+          enabled: false,
+          required: false,
+          mcpUrl: "http://localhost:9121/mcp",
+          sandboxMcpUrl: "http://localhost:9121/mcp",
+          dataDir: ".pourkit/serena/",
+          autoStart: false,
+        },
         cleanup: {
           enabled: false,
           worktreeRetentionDays: 14,
@@ -335,6 +343,14 @@ describe("cleanupRepository", () => {
           pollIntervalSeconds: 15,
           issueListLimit: 50,
         },
+        serena: {
+          enabled: false,
+          required: false,
+          mcpUrl: "http://localhost:9121/mcp",
+          sandboxMcpUrl: "http://localhost:9121/mcp",
+          dataDir: ".pourkit/serena/",
+          autoStart: false,
+        },
         cleanup: {
           enabled: true,
           worktreeRetentionDays: 14,
@@ -386,6 +402,14 @@ describe("cleanupRepository", () => {
           checksCompletionTimeoutSeconds: 1800,
           pollIntervalSeconds: 15,
           issueListLimit: 50,
+        },
+        serena: {
+          enabled: false,
+          required: false,
+          mcpUrl: "http://localhost:9121/mcp",
+          sandboxMcpUrl: "http://localhost:9121/mcp",
+          dataDir: ".pourkit/serena/",
+          autoStart: false,
         },
         cleanup: {
           enabled: true,
@@ -492,6 +516,14 @@ describe("cleanupRepository", () => {
             pollIntervalSeconds: 15,
             issueListLimit: 50,
           },
+          serena: {
+            enabled: false,
+            required: false,
+            mcpUrl: "http://localhost:9121/mcp",
+            sandboxMcpUrl: "http://localhost:9121/mcp",
+            dataDir: ".pourkit/serena/",
+            autoStart: false,
+          },
           cleanup: {
             enabled: true,
             worktreeRetentionDays: 14,
@@ -553,6 +585,14 @@ describe("cleanupRepository", () => {
             checksCompletionTimeoutSeconds: 1800,
             pollIntervalSeconds: 15,
             issueListLimit: 50,
+          },
+          serena: {
+            enabled: false,
+            required: false,
+            mcpUrl: "http://localhost:9121/mcp",
+            sandboxMcpUrl: "http://localhost:9121/mcp",
+            dataDir: ".pourkit/serena/",
+            autoStart: false,
           },
           cleanup: {
             enabled: true,

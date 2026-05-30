@@ -25,6 +25,7 @@ import {
   STAGE_SECTIONS,
 } from "../shared/run-context";
 import { appendProtectedWorkGuidance } from "../shared/prompt-guidance";
+import type { SerenaExecutionContext } from "../execution/opencode-config";
 import {
   readWorktreeRunState,
   writeWorktreeRunState,
@@ -35,6 +36,7 @@ import {
   refreshStaleIssueBranch,
   invalidateAfterBaseRefresh,
 } from "./base-refresh";
+import { prepareSerenaForTarget } from "../serena/preflight";
 import { runConflictResolutionLoop } from "./conflict-resolution";
 import { runFinalizerAgent } from "./pr-description-agent";
 import { ensureClosingRefs } from "../pr/pr-body";
@@ -152,12 +154,27 @@ export function checkIssueGates(
   return { allowed: true, gates };
 }
 
+function resolveSerenaRuntimeConfig(
+  config: PourkitConfig,
+  target: ResolvedTarget
+) {
+  return {
+    enabled: target.serena?.enabled ?? config.serena.enabled,
+    required: target.serena?.required ?? config.serena.required,
+    autoStart: config.serena.autoStart,
+    dataDir: config.serena.dataDir,
+    mcpUrl: config.serena.mcpUrl,
+    sandboxMcpUrl: config.serena.sandboxMcpUrl,
+  };
+}
+
 export interface IssueRunStartResult {
   issue: IssueData;
   target: ResolvedTarget;
   branchName: string;
   worktreeState: WorktreeRunState | null;
   executionResult: ExecutionResult;
+  serena?: SerenaExecutionContext;
 }
 
 export interface RunIssueResult {
@@ -209,6 +226,39 @@ export async function startIssueRun(
   const target = resolveTarget(config, targetName);
   const branchName = renderBranchName(target.branchTemplate, issue);
   const strategy = target.strategy;
+  const serenaRuntimeConfig = resolveSerenaRuntimeConfig(config, target);
+  const shouldPrepareSerena =
+    serenaRuntimeConfig.enabled || serenaRuntimeConfig.required;
+  let serenaExecutionContext: SerenaExecutionContext | undefined;
+
+  if (shouldPrepareSerena) {
+    const serenaPreflight = await prepareSerenaForTarget({
+      repoRoot: ROOT,
+      targetName: target.name,
+      baseBranch: target.baseBranch,
+      dataDir: serenaRuntimeConfig.dataDir,
+      mcpUrl: serenaRuntimeConfig.mcpUrl,
+      enabled: shouldPrepareSerena,
+      required: serenaRuntimeConfig.required,
+      autoStart: serenaRuntimeConfig.autoStart,
+      logger,
+    });
+
+    if (serenaPreflight.enabled && serenaPreflight.available) {
+      serenaExecutionContext = {
+        available: true,
+        sandboxMcpUrl: serenaRuntimeConfig.sandboxMcpUrl,
+      };
+    }
+
+    if (serenaPreflight.enabled && !serenaPreflight.available) {
+      const message = `Serena preflight unavailable for target ${target.name}: ${serenaPreflight.error}`;
+      if (serenaRuntimeConfig.required) {
+        throw new Error(message);
+      }
+      logger.step("warn", message);
+    }
+  }
 
   if (options.resetWorktree) {
     const existingPr = await prProvider.getPr(branchName);
@@ -395,6 +445,7 @@ export async function startIssueRun(
       branchName,
       ...(resolution.mode === "new" ? { baseRef: resolution.baseRef } : {}),
       sandbox: config.sandbox,
+      ...(serenaExecutionContext ? { serena: serenaExecutionContext } : {}),
       autoApprove: true,
       timeoutMs: EXECUTION_TIMEOUT_MS,
       ...(resolution.worktreePath
@@ -446,6 +497,7 @@ export async function startIssueRun(
     branchName,
     worktreeState: finalWorktreeState,
     executionResult,
+    ...(serenaExecutionContext ? { serena: serenaExecutionContext } : {}),
   };
 }
 

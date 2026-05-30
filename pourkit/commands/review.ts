@@ -26,6 +26,7 @@ import {
   STAGE_SECTIONS,
 } from "../shared/run-context";
 import { appendProtectedWorkGuidance } from "../shared/prompt-guidance";
+import type { SerenaExecutionContext } from "../execution/opencode-config";
 
 export interface ReviewResult {
   verdict: ReviewVerdict;
@@ -680,6 +681,7 @@ export interface RunReviewLoopOptions {
   logger: PourkitLogger;
   startingLifetimeIteration?: number;
   humanHandoffResolved?: boolean;
+  serena?: SerenaExecutionContext;
   onRefactorProgress?: (progress: {
     lifetimeIterations: number;
     lastVerdict: ReviewVerdict;
@@ -702,6 +704,7 @@ export async function runReviewWithRefactorLoop(
     logger,
     startingLifetimeIteration = 0,
     humanHandoffResolved,
+    serena,
   } = options;
 
   const strategy = target.strategy;
@@ -895,6 +898,7 @@ export async function runReviewWithRefactorLoop(
             sections: STAGE_SECTIONS.refactor,
           }),
         ],
+        ...(serena ? { serena } : {}),
         logger,
       });
 

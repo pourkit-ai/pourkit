@@ -6,6 +6,7 @@ pourkit/.env
 pourkit/tmp/
 .pourkit/.tmp/
 .pourkit/logs/
+.pourkit/serena/
 .pourkit/state.json
 pourkit.config.json
 pourkit.config.ts

@@ -39,6 +39,14 @@ const validConfig = {
   },
   sandbox: { provider: "docker" },
   checks: { requiredLabels: [], allowedAuthors: [] },
+  serena: {
+    enabled: false,
+    required: false,
+    mcpUrl: "http://localhost:9121/mcp",
+    sandboxMcpUrl: "http://localhost:9121/mcp",
+    dataDir: ".pourkit/serena/",
+    autoStart: false,
+  },
 } satisfies PourkitConfigInput;
 
 definePourkitConfig(validConfig);
@@ -104,6 +112,10 @@ definePourkitConfig({
   targets: [
     {
       ...validConfig.targets[0],
+      serena: {
+        enabled: true,
+        required: false,
+      },
       strategy: {
         ...validConfig.targets[0].strategy,
         conflictResolution: {
