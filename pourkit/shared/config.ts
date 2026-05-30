@@ -7,12 +7,36 @@ export interface CleanupConfig {
   logRetentionDays: number;
 }
 
+export interface SerenaConfig {
+  enabled: boolean;
+  required: boolean;
+  mcpUrl: string;
+  sandboxMcpUrl: string;
+  dataDir: string;
+  autoStart: boolean;
+}
+
+export interface SerenaConfigInput {
+  enabled?: boolean;
+  required?: boolean;
+  mcpUrl?: string;
+  sandboxMcpUrl?: string;
+  dataDir?: string;
+  autoStart?: boolean;
+}
+
+export interface TargetSerenaConfig {
+  enabled?: boolean;
+  required?: boolean;
+}
+
 export interface PourkitConfig {
   targets: Target[];
   labels: LabelsConfig;
   sandbox: SandboxConfig;
   checks: ChecksConfig;
   cleanup: CleanupConfig;
+  serena: SerenaConfig;
 }
 
 export interface PourkitConfigInput {
@@ -21,6 +45,7 @@ export interface PourkitConfigInput {
   sandbox: SandboxConfig;
   checks: ChecksConfigInput;
   cleanup?: Partial<CleanupConfig>;
+  serena?: SerenaConfigInput;
 }
 
 export interface StageAgentConfig {
@@ -66,6 +91,7 @@ export interface TargetInput {
   setupCommands?: VerificationCommandInput[];
   autoMerge?: boolean;
   queue?: QueueConfig;
+  serena?: TargetSerenaConfig;
   strategy: ReviewRefactorLoopStrategyInput;
 }
 
@@ -76,6 +102,7 @@ export interface Target {
   setupCommands?: VerificationCommand[];
   autoMerge?: boolean;
   queue?: QueueConfig;
+  serena?: TargetSerenaConfig;
   strategy: ReviewRefactorLoopStrategy;
 }
 
@@ -274,6 +301,13 @@ const ReviewRefactorLoopStrategySchema = z
   })
   .strict();
 
+const TargetSerenaConfigSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    required: z.boolean().optional(),
+  })
+  .strict();
+
 const TargetSchema = z
   .object({
     name: NonEmptyString,
@@ -293,6 +327,7 @@ const TargetSchema = z
       z.boolean().default(true)
     ),
     queue: QueueConfigSchema.optional(),
+    serena: TargetSerenaConfigSchema.optional(),
     strategy: ReviewRefactorLoopStrategySchema,
   })
   .strict();
@@ -349,6 +384,17 @@ const CleanupConfigSchema = z
   })
   .strict();
 
+const SerenaConfigSchema = z
+  .object({
+    enabled: z.boolean().default(false),
+    required: z.boolean().default(false),
+    mcpUrl: NonEmptyString.default("http://localhost:9121/mcp"),
+    sandboxMcpUrl: NonEmptyString.default("http://localhost:9121/mcp"),
+    dataDir: z.string().default(".pourkit/serena/"),
+    autoStart: z.boolean().default(false),
+  })
+  .strict();
+
 const PourkitConfigSchema = z
   .object({
     targets: z.array(TargetSchema).min(1),
@@ -356,6 +402,7 @@ const PourkitConfigSchema = z
     sandbox: SandboxSchema,
     checks: ChecksSchema,
     cleanup: CleanupConfigSchema.optional(),
+    serena: SerenaConfigSchema.default({}),
   })
   .strict();
 
@@ -531,6 +578,7 @@ export function parseConfig(raw: unknown): PourkitConfig {
       "setupCommands",
       "autoMerge",
       "queue",
+      "serena",
       "strategy",
     ]);
   }
@@ -568,6 +616,7 @@ export function parseConfig(raw: unknown): PourkitConfig {
       setupCommands,
       autoMerge: t.autoMerge,
       queue: t.queue,
+      serena: t.serena,
       strategy: {
         type: "review-refactor-loop" as const,
         implement: { builder: t.strategy.implement.builder },
@@ -616,6 +665,7 @@ export function parseConfig(raw: unknown): PourkitConfig {
       pollIntervalSeconds: data.checks.pollIntervalSeconds ?? 15,
       issueListLimit: data.checks.issueListLimit ?? 50,
     },
+    serena: data.serena,
     cleanup: {
       enabled: data.cleanup?.enabled ?? true,
       worktreeRetentionDays: data.cleanup?.worktreeRetentionDays ?? 14,

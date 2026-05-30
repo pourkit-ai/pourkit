@@ -74,6 +74,14 @@ function createBaseConfig(): PourkitConfig {
       pollIntervalSeconds: 10,
       issueListLimit: 50,
     },
+    serena: {
+      enabled: false,
+      required: false,
+      mcpUrl: "http://localhost:9121/mcp",
+      sandboxMcpUrl: "http://localhost:9121/mcp",
+      dataDir: ".pourkit/serena/",
+      autoStart: false,
+    },
     cleanup: {
       enabled: true,
       worktreeRetentionDays: 14,
