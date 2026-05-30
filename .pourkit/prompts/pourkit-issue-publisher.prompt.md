@@ -9,8 +9,10 @@ Canonical workflow sources:
 ```txt
 .agents/skills/architect/SKILL.md
 .agents/skills/to-issues/SKILL.md
+.agents/skills/triage/SKILL.md
 .pourkit/docs/agents/issue-tracker.md
 .pourkit/docs/agents/naming.md
+.pourkit/docs/agents/triage-labels.md
 ```
 
 ## Scope
@@ -33,7 +35,10 @@ Do:
 - apply `needs-triage` and the appropriate type label
 - apply `blocked` when an Issue has unresolved blockers
 - mirror each exact published child Issue body under the requested mirror folder
-- return a concise receipt only
+- after all child Issues published, load the `triage` skill and triage every child Issue just created
+- after child triage, check the parent PRD — if its labels/state are missing, conflicting, or still `needs-triage`, triage it too; otherwise leave it alone
+- do not triage unrelated repo Issues
+- include triage receipt in output
 
 Do not:
 
@@ -50,6 +55,7 @@ Return only:
 - parent PRD issue number and URL
 - child Issue titles, numbers, URLs, and mirror paths
 - dependency order
-- labels applied
+- labels applied (publish + triage)
+- triage receipt (which issues moved where, any flags)
 - PRD-scoped queue command when known
 - blockers or publish failure details
