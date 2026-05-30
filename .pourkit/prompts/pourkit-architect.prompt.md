@@ -16,12 +16,12 @@ Canonical workflow source:
 .agents/skills/architect/SKILL.md
 ```
 
-Template lookup order:
+Template lookup order for architecture ledger files only:
 
 1. `.pourkit/templates/architecture/` when present
 2. `.agents/skills/architect/templates/` fallback
 
-Do not move templates during normal workflow execution. Use fallback templates as read-only scaffolds when creating missing architecture artifacts.
+Do not move templates during normal workflow execution. Use fallback templates as read-only scaffolds when creating missing architecture ledger artifacts. Do not use architecture templates for PRDs or child Issues; route those through `to-prd` and `to-issues`.
 
 ## Mission
 
@@ -69,6 +69,9 @@ Recognize these commands and natural aliases:
 - `Architect: status`
 - `Architect: next`
 - `Architect: next PRD`
+- `Architect: create PRD`
+- `Architect: breakdown`
+- `Architect: create issues`
 - `Architect: reconcile`
 - `Architect: complete PRD`
 - `Architect: update`
@@ -126,7 +129,7 @@ Create lazily:
 - `prds/`
 - `completions/`
 
-Use templates when available. Set state to `exploring`, unless supplied session context should immediately be compressed.
+Use templates when available for architecture ledger files only. Set state to `exploring`, unless supplied session context should immediately be compressed.
 
 Do not generate PRD during init unless explicitly requested.
 
@@ -171,22 +174,19 @@ Read:
 
 If next slice is unstable, update `next.md` with blockers, set state to `blocked`, and explain what must be decided.
 
-If stable, create one PRD in `prds/NNN-<slice-slug>.md`, update `next.md`, set state to `executing`, and append changelog entry.
+If stable, prepare a source packet for `to-prd` containing initiative path, selected roadmap slice, linked decisions, relevant open questions, roadmap status, and requested mirror path `prds/PRD-00N-<slice-slug>/PRD.md`.
 
-PRD must include:
-
-- purpose
-- source initiative
-- linked decisions
-- scope
-- non-goals
-- requirements
-- acceptance criteria
-- risks
-- validation plan
-- completion update instructions
+Use `to-prd` to create or publish exactly one parent PRD. Do not use an architecture PRD template. Mirror the resulting parent PRD at `prds/PRD-00N-<slice-slug>/PRD.md`, update `next.md`, set state to `executing`, and append changelog entry.
 
 Do not create multiple PRDs unless user explicitly asks.
+
+### Architect: breakdown
+
+Identify active PRD from `next.md`, `STATE.md`, or `prds/PRD-00N-<slice-slug>/PRD.md`.
+
+Use `to-issues` against the parent PRD to create independently grabbable child Issues. Do not write child Issue bodies directly in Architect.
+
+Mirror each child Issue under `prds/PRD-00N-<slice-slug>/issues/I-0N-<issue-slug>.md`, update `next.md` with child Issue list and next queue command when known, and append changelog entry.
 
 ### Architect: reconcile
 
@@ -235,7 +235,10 @@ Directory contract:
           COMPRESSED.md
           EXTRACTIONS.md
       prds/
-        001-<slice-slug>.md
+        PRD-00N-<slice-slug>/
+          PRD.md
+          issues/
+            I-0N-<issue-slug>.md
       completions/
         001-<slice-slug>.md
       next.md
@@ -262,6 +265,8 @@ Roadmap items distinguish:
 
 Completion files are reconciliation records, not celebration notes.
 
+PRD and child Issue mirrors under `prds/` are local copies of issue-tracker artifacts produced by `to-prd` and `to-issues`. They are not generated from architecture templates.
+
 Every modifying command appends to `CHANGELOG.md` with date, command, changed files, and state transition.
 
 ## Anti-Drift Policy
@@ -270,6 +275,7 @@ Warn when:
 
 - new idea contradicts locked decision
 - PRD includes multiple roadmap slices
+- PRD or child Issue is generated from an architecture template instead of `to-prd` or `to-issues`
 - implementation diverged from PRD
 - roadmap phase is skipped without rationale
 - unresolved open question is treated as resolved
