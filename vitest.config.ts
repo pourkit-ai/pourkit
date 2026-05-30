@@ -4,7 +4,13 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["**/*.test.ts"],
-    exclude: ["**/node_modules/**", "**/.sandcastle/**", "**/.tmp/**"],
+    exclude: [
+      "**/node_modules/**",
+      "**/.sandcastle/**",
+      "**/.tmp/**",
+      "**/.pourkit/serena/**",
+      "**/.serena/**",
+    ],
     reporters: process.env.CI_AGENT ? ["agent"] : ["default"],
     silent: process.env.CI_AGENT ? "passed-only" : false,
   },

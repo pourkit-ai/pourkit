@@ -1,2 +1,4 @@
 *.md
 .sandcastle/
+.pourkit/serena/
+.serena/
