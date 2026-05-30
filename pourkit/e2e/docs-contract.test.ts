@@ -75,3 +75,39 @@ describe("issue tracker docs contract", () => {
     expect(issueTracker).toContain("not a Pourkit runtime prerequisite");
   });
 });
+
+describe("Serena handoff docs contract", () => {
+  const readme = readDoc(".pourkit/handoffs/serena/README.md");
+  const integrationPlan = readDoc(
+    ".pourkit/handoffs/serena/integration-plan-and-tradeoffs.md"
+  );
+
+  it("points Last Discussion at validation report", () => {
+    expect(readme).toContain("Validation Report");
+    expect(readme).toContain("integration-plan-and-tradeoffs.md");
+  });
+
+  it("keeps Batch Baseline recommendation and rejected options documented", () => {
+    expect(integrationPlan).toContain("Batch Baseline Model (recommended)");
+    expect(integrationPlan).toContain(
+      "Option A: Worktree Remount + Exclusive Lease (rejected)"
+    );
+    expect(integrationPlan).toContain(
+      "Option B: Serena Inside Sandbox Container (rejected)"
+    );
+    expect(integrationPlan).toContain(
+      "Option C: Serena as MCP stdio inside Sandbox (rejected)"
+    );
+  });
+
+  it("records runtime assumption validation sections", () => {
+    expect(integrationPlan).toContain("## Validation Report");
+    expect(integrationPlan).toContain("Docker HTTP MCP startup");
+    expect(integrationPlan).toContain("Mounted repo indexing");
+    expect(integrationPlan).toContain("Checkout-triggered incremental updates");
+    expect(integrationPlan).toContain("Sandcastle networking");
+    expect(integrationPlan).toContain(
+      "Multiple clients sharing one Serena sidecar"
+    );
+  });
+});
