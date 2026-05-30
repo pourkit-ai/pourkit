@@ -39,6 +39,10 @@ const { execCaptureMock, repoRootMock } = vi.hoisted(() => ({
   repoRootMock: vi.fn(() => "/tmp/pourkit-issue-test"),
 }));
 
+const { prepareSerenaForTargetMock } = vi.hoisted(() => ({
+  prepareSerenaForTargetMock: vi.fn(),
+}));
+
 vi.mock("../shared/common", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../shared/common")>();
   return {
@@ -47,6 +51,10 @@ vi.mock("../shared/common", async (importOriginal) => {
     repoRoot: repoRootMock,
   };
 });
+
+vi.mock("../serena/preflight", () => ({
+  prepareSerenaForTarget: prepareSerenaForTargetMock,
+}));
 
 const makeConfig = (
   overrides: {
@@ -351,6 +359,7 @@ describe("runIssueCommand", () => {
       }
       return { code: 0, stdout: "", stderr: "" };
     });
+    prepareSerenaForTargetMock.mockResolvedValue({ enabled: false });
     executionProvider = new FakeExecutionProvider({
       success: true,
       branch: "pourkit/42/test-issue",
@@ -363,6 +372,178 @@ describe("runIssueCommand", () => {
       rmSync(TEST_DIR, { recursive: true });
     }
     mkdirSync(TEST_DIR, { recursive: true });
+  });
+
+  describe("Serena preflight integration", () => {
+    it("does not run Serena preflight when issue gates fail", async () => {
+      const config = makeConfig({
+        serena: {
+          enabled: true,
+          required: true,
+          autoStart: true,
+          dataDir: ".pourkit/serena/",
+        },
+      });
+      const issueProvider = new FakeIssueProvider([makeIssue()]);
+      const prProvider = makePrProvider();
+      const logger = makeLogger();
+
+      await expect(
+        startIssueRun({
+          issueNumber: 42,
+          config,
+          issueProvider,
+          prProvider,
+          executionProvider,
+          force: false,
+          logger,
+          repoRoot: "/tmp/pourkit-issue-test",
+        })
+      ).rejects.toThrow("Issue gates failed");
+
+      expect(prepareSerenaForTargetMock).not.toHaveBeenCalled();
+      expect(executionProvider.calls).toHaveLength(0);
+    });
+
+    it("warns and continues when optional Serena preflight fails", async () => {
+      const config = makeConfig({
+        serena: {
+          enabled: true,
+          required: false,
+          autoStart: true,
+          dataDir: ".pourkit/serena/",
+        },
+      });
+      prepareSerenaForTargetMock.mockResolvedValue({
+        enabled: true,
+        available: false,
+        error: "Serena sidecar is not running for target test",
+      });
+      const issueProvider = new FakeIssueProvider([
+        makeIssue({ labels: ["ready-for-agent"] }),
+      ]);
+      const prProvider = makePrProvider();
+      const logger = makeLogger();
+
+      const result = await startIssueRun({
+        issueNumber: 42,
+        config,
+        issueProvider,
+        prProvider,
+        executionProvider,
+        force: false,
+        logger,
+        repoRoot: "/tmp/pourkit-issue-test",
+      });
+
+      expect(prepareSerenaForTargetMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          repoRoot: "/tmp/pourkit-issue-test",
+          targetName: "test",
+          baseBranch: "main",
+          dataDir: ".pourkit/serena/",
+          enabled: true,
+          required: false,
+          autoStart: true,
+          logger,
+        })
+      );
+      expect(logger.step).toHaveBeenCalledWith(
+        "warn",
+        expect.stringContaining("Serena preflight unavailable")
+      );
+      expect(executionProvider.calls).toHaveLength(1);
+      expect(result.executionResult.success).toBe(true);
+    });
+
+    it("fails fast before Builder when required Serena preflight fails", async () => {
+      const config = makeConfig({
+        serena: {
+          enabled: true,
+          required: true,
+          autoStart: true,
+          dataDir: ".pourkit/serena/",
+        },
+      });
+      prepareSerenaForTargetMock.mockResolvedValue({
+        enabled: true,
+        available: false,
+        error: "Serena sidecar is not running for target test",
+      });
+      const issueProvider = new FakeIssueProvider([
+        makeIssue({ labels: ["ready-for-agent"] }),
+      ]);
+      const prProvider = makePrProvider();
+      const logger = makeLogger();
+
+      await expect(
+        startIssueRun({
+          issueNumber: 42,
+          config,
+          issueProvider,
+          prProvider,
+          executionProvider,
+          force: false,
+          logger,
+          repoRoot: "/tmp/pourkit-issue-test",
+        })
+      ).rejects.toThrow(
+        "Serena preflight unavailable for target test: Serena sidecar is not running for target test"
+      );
+
+      expect(executionProvider.calls).toHaveLength(0);
+      expect(execCaptureMock).not.toHaveBeenCalledWith(
+        "git",
+        ["worktree", "list", "--porcelain"],
+        expect.anything()
+      );
+    });
+
+    it("fails fast when Serena is required even if the target disables it", async () => {
+      const config = makeConfig({
+        serena: {
+          enabled: false,
+          required: true,
+          autoStart: true,
+          dataDir: ".pourkit/serena/",
+        },
+      });
+      prepareSerenaForTargetMock.mockResolvedValue({
+        enabled: true,
+        available: false,
+        error: "Serena sidecar is not running for target test",
+      });
+      const issueProvider = new FakeIssueProvider([
+        makeIssue({ labels: ["ready-for-agent"] }),
+      ]);
+      const prProvider = makePrProvider();
+      const logger = makeLogger();
+
+      await expect(
+        startIssueRun({
+          issueNumber: 42,
+          config,
+          issueProvider,
+          prProvider,
+          executionProvider,
+          force: false,
+          logger,
+          repoRoot: "/tmp/pourkit-issue-test",
+        })
+      ).rejects.toThrow(
+        "Serena preflight unavailable for target test: Serena sidecar is not running for target test"
+      );
+
+      expect(prepareSerenaForTargetMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          enabled: true,
+          required: true,
+          autoStart: true,
+          dataDir: ".pourkit/serena/",
+        })
+      );
+      expect(executionProvider.calls).toHaveLength(0);
+    });
   });
 
   it("passes run context to Builder, pushes branch, and opens a PR", async () => {

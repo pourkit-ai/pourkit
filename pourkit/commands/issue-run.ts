@@ -35,6 +35,7 @@ import {
   refreshStaleIssueBranch,
   invalidateAfterBaseRefresh,
 } from "./base-refresh";
+import { prepareSerenaForTarget } from "../serena/preflight";
 import { runConflictResolutionLoop } from "./conflict-resolution";
 import { runFinalizerAgent } from "./pr-description-agent";
 import { ensureClosingRefs } from "../pr/pr-body";
@@ -152,6 +153,18 @@ export function checkIssueGates(
   return { allowed: true, gates };
 }
 
+function resolveSerenaRuntimeConfig(
+  config: PourkitConfig,
+  target: ResolvedTarget
+) {
+  return {
+    enabled: target.serena?.enabled ?? config.serena.enabled,
+    required: target.serena?.required ?? config.serena.required,
+    autoStart: config.serena.autoStart,
+    dataDir: config.serena.dataDir,
+  };
+}
+
 export interface IssueRunStartResult {
   issue: IssueData;
   target: ResolvedTarget;
@@ -209,6 +222,30 @@ export async function startIssueRun(
   const target = resolveTarget(config, targetName);
   const branchName = renderBranchName(target.branchTemplate, issue);
   const strategy = target.strategy;
+  const serenaRuntimeConfig = resolveSerenaRuntimeConfig(config, target);
+  const shouldPrepareSerena =
+    serenaRuntimeConfig.enabled || serenaRuntimeConfig.required;
+
+  if (shouldPrepareSerena) {
+    const serenaPreflight = await prepareSerenaForTarget({
+      repoRoot: ROOT,
+      targetName: target.name,
+      baseBranch: target.baseBranch,
+      dataDir: serenaRuntimeConfig.dataDir,
+      enabled: shouldPrepareSerena,
+      required: serenaRuntimeConfig.required,
+      autoStart: serenaRuntimeConfig.autoStart,
+      logger,
+    });
+
+    if (serenaPreflight.enabled && !serenaPreflight.available) {
+      const message = `Serena preflight unavailable for target ${target.name}: ${serenaPreflight.error}`;
+      if (serenaRuntimeConfig.required) {
+        throw new Error(message);
+      }
+      logger.step("warn", message);
+    }
+  }
 
   if (options.resetWorktree) {
     const existingPr = await prProvider.getPr(branchName);
