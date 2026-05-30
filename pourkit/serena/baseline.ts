@@ -66,6 +66,7 @@ export async function ensureBaselineWorktree(options: {
   const paths = resolveSerenaPaths(options.repoRoot, options.dataDir);
 
   await mkdir(paths.rootDir, { recursive: true });
+  await mkdir(paths.dataDir, { recursive: true });
 
   if (!(await pathExists(paths.baselineWorktreePath))) {
     await mkdir(path.dirname(paths.baselineWorktreePath), { recursive: true });

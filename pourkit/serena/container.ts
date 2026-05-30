@@ -1,3 +1,5 @@
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
 import { execCapture } from "../shared/common";
 
 export interface SerenaSidecarOptions {
@@ -129,4 +131,16 @@ export async function stopSerenaSidecar(
   }
 
   return readSidecarStatus(options);
+}
+
+export interface PrepareSerenaSidecarConfigOptions {
+  baselineWorktreePath: string;
+  dataDir: string;
+}
+
+export async function prepareSerenaSidecarConfig(
+  options: PrepareSerenaSidecarConfigOptions
+): Promise<void> {
+  const configDir = path.join(options.dataDir, "config");
+  await mkdir(configDir, { recursive: true });
 }
