@@ -22,6 +22,7 @@ export interface SerenaSidecarStatus {
 const DEFAULT_CONTAINER_NAME = "pourkit-serena-sidecar";
 const MCP_CONTAINER_PORT = 9121;
 const DASHBOARD_CONTAINER_PORT = 24282;
+const SERENA_DATA_MOUNT = "/workspaces/serena-data";
 
 type DockerInspectResult = {
   State?: {
@@ -80,9 +81,11 @@ function buildStartArgs(options: SerenaSidecarOptions, containerName: string) {
     "-p",
     `${options.dashboardPort}:${DASHBOARD_CONTAINER_PORT}`,
     "-v",
-    `${options.baselineWorktreePath}:/workspaces/pourkit:ro`,
+    `${options.baselineWorktreePath}:/workspaces/pourkit`,
     "-v",
-    `${options.dataDir}:/workspaces/serena`,
+    `${options.dataDir}:${SERENA_DATA_MOUNT}`,
+    "-e",
+    `SERENA_HOME=${SERENA_DATA_MOUNT}/config`,
     options.image,
     "serena",
     "start-mcp-server",
@@ -130,6 +133,8 @@ export async function indexSerenaProject(
     "serena",
     "project",
     "create",
+    "--language",
+    "typescript",
     "--index",
     "/workspaces/pourkit",
   ]);

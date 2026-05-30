@@ -85,11 +85,12 @@ describe("startSerenaSidecar", () => {
           started = true;
           expect(args).toContain("ghcr.io/oraios/serena:latest");
           expect(args).toContain(
-            "/repo/.pourkit/serena/baseline/active-repo:/workspaces/pourkit:ro"
+            "/repo/.pourkit/serena/baseline/active-repo:/workspaces/pourkit"
           );
           expect(args).toContain(
-            "/repo/.pourkit/serena/data:/workspaces/serena"
+            "/repo/.pourkit/serena/data:/workspaces/serena-data"
           );
+          expect(args).toContain("SERENA_HOME=/workspaces/serena-data/config");
           expect(args).toContain("-p");
           expect(args).toContain("9121:9121");
           expect(args).toContain("24282:24282");
@@ -232,6 +233,8 @@ describe("indexSerenaProject", () => {
       "serena",
       "project",
       "create",
+      "--language",
+      "typescript",
       "--index",
       "/workspaces/pourkit",
     ]);
