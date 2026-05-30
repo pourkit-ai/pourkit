@@ -118,6 +118,31 @@ describe("parseConfig", () => {
     expect(config.sandbox.copyToWorktree).toBeUndefined();
   });
 
+  it("applies Serena defaults when omitted", () => {
+    const config = parseConfig(rawConfig());
+
+    expect(config.serena).toMatchObject({
+      enabled: false,
+      required: false,
+      mcpUrl: "http://localhost:9121/mcp",
+      sandboxMcpUrl: "http://localhost:9121/mcp",
+      dataDir: ".pourkit/serena/",
+      autoStart: false,
+    });
+  });
+
+  it("rejects empty serena.mcpUrl", () => {
+    expect(() => parseConfig(rawConfig({ serena: { mcpUrl: "" } }))).toThrow(
+      "serena.mcpUrl must be a non-empty string"
+    );
+  });
+
+  it("rejects empty serena.sandboxMcpUrl", () => {
+    expect(() =>
+      parseConfig(rawConfig({ serena: { sandboxMcpUrl: "" } }))
+    ).toThrow("serena.sandboxMcpUrl must be a non-empty string");
+  });
+
   it("parses sandbox copyToWorktree entries", () => {
     const config = parseConfig(
       rawConfig({
@@ -312,6 +337,25 @@ describe("parseConfig", () => {
     ]);
   });
 
+  it("parses target Serena overrides", () => {
+    const config = parseConfig(
+      rawConfig({
+        targets: [
+          {
+            name: "prod",
+            serena: { enabled: true, required: true },
+            strategy: strategy(),
+          },
+        ],
+      })
+    );
+
+    expect(config.targets[0].serena).toEqual({
+      enabled: true,
+      required: true,
+    });
+  });
+
   it("rejects verify config without commands", () => {
     expect(() =>
       parseConfig(
@@ -456,6 +500,12 @@ describe("parseConfig", () => {
         rawConfig({ targets: [{ name: "test", prBodyTemplate: "x" }] })
       )
     ).toThrow("targets[0].prBodyTemplate is not supported");
+  });
+
+  it("rejects unknown top-level keys", () => {
+    expect(() => parseConfig(rawConfig({ unknownTopLevel: true }))).toThrow(
+      "unknownTopLevel is not supported"
+    );
   });
 
   it("validates required sections and values", () => {
@@ -797,6 +847,20 @@ describe("parseConfig", () => {
     expect(() =>
       parseConfig(rawConfig({ sandbox: { provider: "docker", extra: true } }))
     ).toThrow("sandbox.extra is not supported");
+
+    expect(() =>
+      parseConfig(
+        rawConfig({
+          targets: [
+            {
+              name: "test",
+              serena: { enabled: true, extra: true } as any,
+              strategy: strategy(),
+            },
+          ],
+        })
+      )
+    ).toThrow("targets[0].serena.extra is not supported");
 
     expect(() =>
       parseConfig(
