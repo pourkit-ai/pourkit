@@ -1,5 +1,5 @@
 import path from "node:path";
-import { mkdir, mkdtemp } from "node:fs/promises";
+import { access, mkdir, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -258,5 +258,7 @@ describe("ensureBaselineWorktree", () => {
     await expect(ensureBaselineWorktree({ repoRoot })).resolves.toEqual(
       baselinePaths
     );
+
+    await expect(access(baselinePaths.dataDir)).resolves.toBeUndefined();
   });
 });

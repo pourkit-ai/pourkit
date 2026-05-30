@@ -10,6 +10,10 @@ import { runPrCreateCommand } from "./commands/pr-create";
 import { runPrMergeCommand } from "./commands/pr-merge";
 import type { InitCliOptions } from "./commands/init";
 import { runInitCommand } from "./commands/init";
+import {
+  runSerenaInitCommand,
+  runSerenaRefreshCommand,
+} from "./commands/serena";
 import { GitHubIssueProvider } from "./providers/github-provider";
 import { GitHubPRProvider } from "./providers/github-pr-provider";
 import { requireGitHubClient } from "./providers/github-client";
@@ -378,6 +382,32 @@ export function createCliProgram(version: string): Command {
         await runInitCommand(initOptions);
       }
     );
+
+  const serena = program
+    .command("serena")
+    .description("Serena baseline and sidecar commands");
+
+  serena
+    .command("init")
+    .requiredOption("--target <name>", "target name")
+    .option("--cwd <path>", "target repository directory")
+    .action(async (options: { target: string; cwd?: string }) => {
+      await runSerenaInitCommand({
+        target: options.target,
+        cwd: options.cwd,
+      });
+    });
+
+  serena
+    .command("refresh")
+    .requiredOption("--target <name>", "target name")
+    .option("--cwd <path>", "target repository directory")
+    .action(async (options: { target: string; cwd?: string }) => {
+      await runSerenaRefreshCommand({
+        target: options.target,
+        cwd: options.cwd,
+      });
+    });
 
   const pr = program.command("pr").description("Pull request commands");
 

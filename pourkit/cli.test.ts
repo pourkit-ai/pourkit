@@ -16,6 +16,8 @@ const {
   runPrCreateCommandMock,
   runPrMergeCommandMock,
   runInitCommandMock,
+  runSerenaInitCommandMock,
+  runSerenaRefreshCommandMock,
   promptForInitChoicesMock,
   cleanupRepositoryMock,
 } = vi.hoisted(() => ({
@@ -24,6 +26,8 @@ const {
   runPrCreateCommandMock: vi.fn(),
   runPrMergeCommandMock: vi.fn(),
   runInitCommandMock: vi.fn(),
+  runSerenaInitCommandMock: vi.fn(),
+  runSerenaRefreshCommandMock: vi.fn(),
   promptForInitChoicesMock: vi.fn(),
   cleanupRepositoryMock: vi.fn().mockResolvedValue(undefined),
 }));
@@ -94,6 +98,11 @@ vi.mock("./commands/pr-merge", () => ({
 vi.mock("./commands/init", () => ({
   runInitCommand: runInitCommandMock,
   promptForInitChoices: promptForInitChoicesMock,
+}));
+
+vi.mock("./commands/serena", () => ({
+  runSerenaInitCommand: runSerenaInitCommandMock,
+  runSerenaRefreshCommand: runSerenaRefreshCommandMock,
 }));
 
 vi.mock("./shared/cleanup", () => ({
@@ -622,6 +631,66 @@ describe("pourkit cli", () => {
         dryRun: true,
       })
     );
+  });
+
+  it("routes serena init through commander", async () => {
+    const { main } = await import("./cli");
+
+    await main(["serena", "init", "--target", "default", "--cwd", "/repo"]);
+
+    expect(runSerenaInitCommandMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: "default",
+        cwd: "/repo",
+      })
+    );
+  });
+
+  it("routes serena refresh through commander", async () => {
+    const { main } = await import("./cli");
+
+    await main(["serena", "refresh", "--target", "default", "--cwd", "/repo"]);
+
+    expect(runSerenaRefreshCommandMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: "default",
+        cwd: "/repo",
+      })
+    );
+  });
+
+  it("rejects missing target for serena init", async () => {
+    const exitCode = process.exitCode;
+    process.exitCode = undefined;
+    const stderrWrite = vi
+      .spyOn(process.stderr, "write")
+      .mockImplementation(() => true);
+
+    try {
+      const { main } = await import("./cli");
+
+      await expect(main(["serena", "init"])).rejects.toThrow();
+    } finally {
+      stderrWrite.mockRestore();
+      process.exitCode = exitCode;
+    }
+  });
+
+  it("rejects missing target for serena refresh", async () => {
+    const exitCode = process.exitCode;
+    process.exitCode = undefined;
+    const stderrWrite = vi
+      .spyOn(process.stderr, "write")
+      .mockImplementation(() => true);
+
+    try {
+      const { main } = await import("./cli");
+
+      await expect(main(["serena", "refresh"])).rejects.toThrow();
+    } finally {
+      stderrWrite.mockRestore();
+      process.exitCode = exitCode;
+    }
   });
 
   it("routes init --package-manager through commander", async () => {
